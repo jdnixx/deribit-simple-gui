@@ -21,13 +21,18 @@ canvas.pack()
 frame = tk.Frame(root, bg="lightblue")
 frame.place(relwidth=0.5, relheight=0.8, relx=0.1, rely=0.1)
 
-button = tk.Button(frame, text="Test button lol")
-button.place(relx=0, rely=0, relwidth=0.25, relheight=0.25)
-
 
 text = tk.Text(frame)
-text.insert(tk.INSERT, client.positions())
+
+def displayPositions():
+	text.insert(tk.INSERT, client.positions())
+	button.place(relx=0, rely=0.1, relwidth=0.25, relheight=0.25)
+
 text.place(relx=0, rely=0.5, relwidth=0.9, relheight=0.4)
+
+
+button = tk.Button(frame, text="Test button lol", command=displayPositions)
+button.place(relx=0, rely=0, relwidth=0.25, relheight=0.25)
 
 #label = tk.Label(frame, text=client.positions())
 #label.place(relx=0, rely=0.5, relwidth=0.9, relheight=0.1)
