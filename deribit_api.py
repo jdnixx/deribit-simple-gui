@@ -112,29 +112,32 @@ class RestClient(object):
         return self.request("/api/v1/private/account", {})
 
 
-    def buy(self, instrument, quantity, price, postOnly=None, label=None):
+    def buy(self, instrument, orderType, quantity, price=None, postOnly=None, label=None):
         options = {
             "instrument": instrument,
+            "type": orderType,
             "quantity": quantity,
-            "price": price
         }
-  
+
+        if price:
+            options["price"] = price
         if label:
             options["label"] = label
-
         if postOnly:
             options["postOnly"] = postOnly
 
         return self.request("/api/v1/private/buy", options)
 
 
-    def sell(self, instrument, quantity, price, postOnly=None, label=None):
+    def sell(self, instrument, orderType, quantity, price=None, postOnly=None, label=None):
         options = {
             "instrument": instrument,
+            "type": orderType,
             "quantity": quantity,
-            "price": price
         }
 
+        if price:
+            options["price"] = price
         if label:
             options["label"] = label
         if postOnly:
@@ -177,6 +180,10 @@ class RestClient(object):
 
 
     def positions(self):
+        """
+
+        :rtype: object
+        """
         return self.request("/api/v1/private/positions", {})
 
 
