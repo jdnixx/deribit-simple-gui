@@ -1,72 +1,106 @@
 from tkinter import *
+from tkinter import ttk
 
 # set up RestClient
+from deribot import OrderManager
 from deribit_api import RestClient
 
-client = RestClient("AHoDez9QDVyM", "UQT5ZLCGE4WTF6XYSKTJZSJKOCXQES35", "https://test.deribit.com")  # key, secret, URL
-client.index()
-client.account()
+# client = RestClient("AHoDez9QDVyM", "UQT5ZLCGE4WTF6XYSKTJZSJKOCXQES35", "https://test.deribit.com")  # key, secret, URL
+# client.index()
+# client.account()
 # print(client.positions())
 
 HEIGHT = 700
 WIDTH = 800
 
 
-class OrderManager:
-	def __init__(self, element=None):
-		self.element = element
-		print("Executed during OrderManager definition")
-
-	def display_positions(self, text):
-		text.insert(INSERT, client.positions())
+# OrderManager object
+om = OrderManager('BTC-PERPETUAL')
+om.run_loop()
 
 
 class MarketBuyButton(Button):
-	def __init__(self, *args, **kwargs):
-		# inherit everything from Button parent
-		# also, define buy for BTC-PERPETUAL market buy
-		buy = lambda :self.market_buy("BTC-PERPETUAL", "market", 10)
-		Button.__init__(self, *args, **kwargs, command=buy)
+    """
+    inherit everything from Button parent, but add:
 
-	def market_buy(self, instrument, orderType, quantity):
-		return client.buy(instrument, orderType, quantity)
+    :param qty:
+        Quantity of contracts (USD) to be placed when button is clicked.
+    """
+
+    def __init__(self, master, amt, **kwargs):
+        self.amt = amt
+        self.qty = amt / 10
+        Button.__init__(self, master, command=om.market_buy(amt), text="Market Buy %d" % self.amt,
+                        bg="lightgreen",
+                        activebackground="green", **kwargs)
+
+    # def market_buy(self):
+    #     return lambda: client.buy("BTC-PERPETUAL", "market", self.qty)
 
 
 class MarketSellButton(Button):
-	def __init__(self, *args, **kwargs):
-		# inherit everything from Button parent
-		# also, define sell for BTC-PERPETUAL market sell
-		sell = lambda :self.market_sell("BTC-PERPETUAL", "market", 10)
-		Button.__init__(self, *args, **kwargs, command=sell)
+    """
+    inherit everything from Button parent, but add:
 
-	def market_sell(self, instrument, orderType, quantity):
-		return client.sell(instrument, orderType, quantity)
+    :param qty:
+        Quantity of contracts (USD) to be placed when button is clicked.
+    """
 
-om = OrderManager()
+    def __init__(self, master, amt, **kwargs):
+        self.amt = amt
+        self.qty = amt / 10
+        Button.__init__(self, master, command=om.market_sell(amt), text="Market Sell %d" % self.amt,
+                        bg="firebrick",
+                        activebackground="maroon", **kwargs)
+
+    # def market_sell(self):
+    #     return lambda: client.sell("BTC-PERPETUAL", "market", self.qty)
+
+
+def left_click(event):
+    print("left")
+
+
+# tkinter stuff
+
 root = Tk()
 
 canvas = Canvas(root, height=HEIGHT, width=WIDTH)
-frame = Frame(root, bg="lightblue")
-
+frame = ttk.Frame(root, padding="3 3 12 12")
 textbox = Text(frame)
 
-#
-# def display_positions():
-# 	text1.insert(INSERT, client.positions())
+frame.bind("<Button-1>", left_click)
 
-
-buttonMarketBuy = MarketBuyButton(frame, text="Market Buy")
-buttonMarketSell = MarketSellButton(frame, text="Market Sell")
-
-# label = Label(frame, text=client.positions())
-# label.place(relx=0, rely=0.5, relwidth=0.9, relheight=0.1)
 
 # packs
+
 canvas.pack()
 frame.place(relwidth=0.5, relheight=0.8, relx=0.1, rely=0.1)
 textbox.place(relx=0, rely=0.5, relwidth=0.9, relheight=0.4)
 
-buttonMarketBuy.place(relx=0, rely=0, relwidth=0.25, relheight=0.25)
-buttonMarketSell.place(relx=0.3, rely=0, relwidth=0.25, relheight=0.25)
+# buttons creation
 
+button_b1k = MarketBuyButton(frame, 1000)
+button_b2k = MarketBuyButton(frame, 2000)
+
+button_s1k = MarketSellButton(frame, 1000)
+
+
+button_b1k.grid(row=0, ipadx=5, ipady=5, padx=5, pady=5)
+button_b2k.grid(row=1, ipadx=5, ipady=5, padx=5, pady=5)
+
+button_s1k.grid(row=0, column=1, ipadx=5, ipady=5, padx=5, pady=5)
+
+# button_b1k.place(relx=0, rely=0, relwidth=0.25, relheight=0.25)
+# button_b2k.place(relx=0, rely=0, relwidth=0.25, relheight=0.25)
+
+# button_s1k.place(relx=0.3, rely=0, relwidth=0.25, relheight=0.25)
+
+
+
+
+
+#
 root.mainloop()
+
+

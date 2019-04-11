@@ -112,15 +112,20 @@ class RestClient(object):
         return self.request("/api/v1/private/account", {})
 
 
-    def buy(self, instrument, orderType, quantity, price=None, postOnly=None, label=None):
+    def buy(self, instrument, ordertype, quantity, price=None, stopPx=None, reduce_only=None, postOnly=None,
+            label=None):
         options = {
             "instrument": instrument,
-            "type": orderType,
+            "type": ordertype,
             "quantity": quantity,
         }
 
         if price:
             options["price"] = price
+        if stopPx:
+            options["stopPx"] = stopPx
+        if reduce_only:
+            options["reduce_only"] = reduce_only
         if label:
             options["label"] = label
         if postOnly:
@@ -129,15 +134,20 @@ class RestClient(object):
         return self.request("/api/v1/private/buy", options)
 
 
-    def sell(self, instrument, orderType, quantity, price=None, postOnly=None, label=None):
+    def sell(self, instrument, ordertype, quantity, price=None, stopPx=None, reduce_only=None, postOnly=None,
+             label=None):
         options = {
             "instrument": instrument,
-            "type": orderType,
+            "type": ordertype,
             "quantity": quantity,
         }
 
         if price:
             options["price"] = price
+        if stopPx:
+            options["stopPx"] = stopPx
+        if reduce_only:
+            options["reduce_only"] = reduce_only
         if label:
             options["label"] = label
         if postOnly:
@@ -179,7 +189,7 @@ class RestClient(object):
         return self.request("/api/v1/private/getopenorders", options)
 
 
-    def positions(self):
+    def positions(self) -> object:
         """
 
         :rtype: object
