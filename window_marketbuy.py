@@ -1,5 +1,7 @@
 from tkinter import *
 from tkinter import ttk
+import trio
+import triotk
 
 # set up RestClient
 from deribot import OrderManager
@@ -16,45 +18,44 @@ WIDTH = 800
 
 # OrderManager object
 om = OrderManager('BTC-PERPETUAL')
-om.run_loop()
 
 
+"""
+BUTTON TYPES
+
+inherit from parent tk.Button
+"""
 class MarketBuyButton(Button):
-    """
-    inherit everything from Button parent, but add:
-
-    :param qty:
-        Quantity of contracts (USD) to be placed when button is clicked.
-    """
-
     def __init__(self, master, amt, **kwargs):
-        self.amt = amt
-        self.qty = amt / 10
-        Button.__init__(self, master, command=om.market_buy(amt), text="Market Buy %d" % self.amt,
-                        bg="lightgreen",
-                        activebackground="green", **kwargs)
-
-    # def market_buy(self):
-    #     return lambda: client.buy("BTC-PERPETUAL", "market", self.qty)
+        Button.__init__(self, master, command=om.market_buy(amt),
+                        **kwargs)
+        self.config(text="Market Buy %d" % amt,
+                    bg="lightgreen",
+                    activebackground="green")
 
 
 class MarketSellButton(Button):
-    """
-    inherit everything from Button parent, but add:
-
-    :param qty:
-        Quantity of contracts (USD) to be placed when button is clicked.
-    """
-
     def __init__(self, master, amt, **kwargs):
-        self.amt = amt
-        self.qty = amt / 10
-        Button.__init__(self, master, command=om.market_sell(amt), text="Market Sell %d" % self.amt,
+        Button.__init__(self, master, command=om.market_sell(amt), text="Market Sell %d" % amt,
                         bg="firebrick",
                         activebackground="maroon", **kwargs)
 
-    # def market_sell(self):
-    #     return lambda: client.sell("BTC-PERPETUAL", "market", self.qty)
+
+class LimitChaseBuyButton(Button):
+    def __init__(self, master, amt, **kwargs):
+        Button.__init__(self, master, command=om.limit_chase_buy(amt), text="Limit CHASE Buy %d" % amt,
+                        bg="lightgreen",
+                        activebackground="green", **kwargs)
+
+
+class LimitBuyButton(Button):
+    def __init__(self, master, amt, **kwargs):
+        self.price = om.get_highest_bid()
+        Button.__init__(self, master, command=om.limit_buy(amt, self.price),
+                        **kwargs)
+        self.config(text="Limit Buy %d at $%.2f" % (amt, self.price),
+                    bg="lightgreen",
+                    activebackground="green")
 
 
 def left_click(event):
@@ -82,25 +83,22 @@ textbox.place(relx=0, rely=0.5, relwidth=0.9, relheight=0.4)
 
 button_b1k = MarketBuyButton(frame, 1000)
 button_b2k = MarketBuyButton(frame, 2000)
+button_b1k_l = LimitBuyButton(frame, 1000)
+# button_b1k_lc = LimitChaseBuyButton(frame, 1000)
 
 button_s1k = MarketSellButton(frame, 1000)
 
 
 button_b1k.grid(row=0, ipadx=5, ipady=5, padx=5, pady=5)
 button_b2k.grid(row=1, ipadx=5, ipady=5, padx=5, pady=5)
+button_b1k_l.grid(row=1, ipadx=5, ipady=5, padx=5, pady=5)
+# button_b1k_lc.grid(row=1, ipadx=5, ipady=5, padx=5, pady=5)
 
 button_s1k.grid(row=0, column=1, ipadx=5, ipady=5, padx=5, pady=5)
 
-# button_b1k.place(relx=0, rely=0, relwidth=0.25, relheight=0.25)
-# button_b2k.place(relx=0, rely=0, relwidth=0.25, relheight=0.25)
-
-# button_s1k.place(relx=0.3, rely=0, relwidth=0.25, relheight=0.25)
-
-
-
-
-
 #
-root.mainloop()
 
-
+# MAIN L0000000000000P
+trio.run(om.run_loop)
+master_loop = root.mainloop
+trio.run(master_loop)
