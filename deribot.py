@@ -16,12 +16,28 @@ LOOP_INTERVAL = 0.5
 MIN_POSITION = -10000
 MAX_POSITION = 10000
 
-# instrument to be traded
-# INSTRUMENT = "BTC-PERPETUAL"
-
 TICK_SIZE = 0.25
 
-CLIENT = RestClient("AHoDez9QDVyM", "UQT5ZLCGE4WTF6XYSKTJZSJKOCXQES35", "https://test.deribit.com")  # key, secret, URL
+"""
+Deribit Client (deribit_api) setup
+---
+Keyfile must have at least 2 lines:
+    key on the first line
+    secret on the second line
+    (optional) "test" on the third line, if using the testnet
+"""
+PATH_TO_KEYFILE = "../deribit_keys.txt" # assumes keyfile is in parent dir
+
+with open(PATH_TO_KEYFILE, "r") as f:
+    deribit_key = f.readline().strip()
+    deribit_secret = f.readline().strip()
+    optional_test = f.readline().strip()
+    if optional_test == "test":
+        deribit_testnet = "https://test.deribit.com"
+    else:
+        deribit_testnet = None
+
+CLIENT = RestClient(deribit_key, deribit_secret, deribit_testnet) # key, secret, URL
 # self.client.index()
 # self.client.account()
 
@@ -36,7 +52,7 @@ class OrderManager:
         self.client = CLIENT
         self.client.index()
         self.client.account()
-        # self.display_positions()
+        self.display_positions()
 
     def run(self):
         try:
@@ -63,7 +79,7 @@ class OrderManager:
         self.average_price = position['averagePrice']
         self.liq_price = position['estLiqPrice']
 
-        print("%d USD " % self.pos_amt + ("Long" if position['direction'] == 'buy' else "Short") + " from entry %.2f" % self.average_price)
+        print("%d USD " % self.pos_amt + position['direction'] + " from entry %.2f" % self.average_price)
 
     def short_limit_exceeded(self):
         return
