@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d9226d5a-c343-41ff-84a9-827bb200f737" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/deribot.py" beforeDir="false" afterPath="$PROJECT_DIR$/deribot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/window_marketbuy.py" beforeDir="false" afterPath="$PROJECT_DIR$/window_marketbuy.py" afterDir="false" />
-    </list>
+    <list default="true" id="d9226d5a-c343-41ff-84a9-827bb200f737" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +56,7 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/deribit_api.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="189">
+                <state relative-caret-position="240">
                   <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
                   <folding>
                     <element signature="e#25#68#0" expanded="true" />
@@ -112,8 +108,8 @@
           <file pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/deribot.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="117">
-                  <caret line="23" column="35" lean-forward="true" selection-start-line="23" selection-start-column="35" selection-end-line="23" selection-end-column="35" />
+                <state relative-caret-position="192">
+                  <caret line="29" lean-forward="true" selection-start-line="29" selection-end-line="29" />
                   <folding>
                     <element signature="e#144#166#0" expanded="true" />
                   </folding>
@@ -558,7 +554,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/deribit_api.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="189">
+        <state relative-caret-position="240">
           <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
           <folding>
             <element signature="e#25#68#0" expanded="true" />
@@ -585,8 +581,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/deribot.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="117">
-          <caret line="23" column="35" lean-forward="true" selection-start-line="23" selection-start-column="35" selection-end-line="23" selection-end-column="35" />
+        <state relative-caret-position="192">
+          <caret line="29" lean-forward="true" selection-start-line="29" selection-end-line="29" />
           <folding>
             <element signature="e#144#166#0" expanded="true" />
           </folding>
