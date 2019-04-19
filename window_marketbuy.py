@@ -1,5 +1,5 @@
 import tkinter as tk
-
+import time
 import asyncio
 import trio
 
@@ -18,9 +18,10 @@ WIDTH = 800
 
 # The Main Loop
 loop = asyncio.get_event_loop()
+print(loop)
 # OrderManager instance
 om = OrderManager(INSTRUMENT)
-
+print(asyncio.get_event_loop())
 
 """
 BUTTON TYPES
@@ -120,29 +121,38 @@ async def runloop(func):
     return wrapper
 
 
-async def run_tk(root, interval=0.05):
+
+def fuckitup():
+    print("After method!!")
+    print(asyncio.get_event_loop().)
+    frame.after(2000, fuckitup)
+
+frame.after(0, fuckitup)
+
+
+async def run_tk(root, interval=0.020):
     """
     Substitutes for root.mainloop() in tkinter
     Makes it async, basically
+    :param: interval = 0.020 works well
     """
     while True:
         root.update()
+        print(asyncio.get_event_loop())
+        print("GUI loop has run: time", time.perf_counter())
+        # await trio.sleep(interval)
         await asyncio.sleep(interval)
 
+
 async def main():
-    await run_tk(root)
+    omrun = asyncio.create_task(om.run())
+    runtk = asyncio.create_task(run_tk(root))
+    await asyncio.gather(omrun, runtk)
 
 
-if __name__ == '__main__':
-    asyncio.get_event_loop().run_until_complete(main())
-
-# trio.run(om.run_loop)
-
-
-
-
-
-
+# if __name__ == '__main__':
+#     asyncio.run(main())
+root.mainloop()
 
 
 

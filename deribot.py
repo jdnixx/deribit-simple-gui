@@ -4,9 +4,8 @@ Deribit Bot - DERIBOT
 A class to hold various features of the bot (using the functions in deribit_api.py),
 and execute them in a loop.
 """
-from time import sleep
 import sys
-import trio
+import time
 import asyncio
 from deribit_api import RestClient
 
@@ -52,11 +51,12 @@ class OrderManager:
         self.client = CLIENT
         self.client.index()
         self.client.account()
-        self.display_positions()
+        self.refresh_position_details()
+        print("^Init run!\n")
 
-    def run(self):
+    async def run(self):
         try:
-            trio.run(self.run_loop)
+            await self.run_loop()
         except KeyboardInterrupt:
             sys.exit()
 
@@ -71,15 +71,18 @@ class OrderManager:
         else:
             return amt
 
-    def display_positions(self):
-        position = self.client.positions()[0]
+    def get_position(self):
+        return self.client.positions()[0]
 
-        self.pos_size = position['size']
-        self.pos_amt = position['amount']
-        self.average_price = position['averagePrice']
-        self.liq_price = position['estLiqPrice']
+    def refresh_position_details(self):
+        pos = self.get_position()
+        self.pos_size_contracts = pos['size']
+        self.pos_amt_USD = pos['amount']
+        self.entry = pos['averagePrice']
+        self.liq_price = pos['estLiqPrice']
 
-        print("%d USD " % self.pos_amt + position['direction'] + " from entry %.2f" % self.average_price)
+        # purely for console logging purposes - should be replaced with
+        print("%d USD " % self.pos_amt_USD + pos['direction'] + " from entry %.2f" % self.entry)
 
     def short_limit_exceeded(self):
         return
@@ -130,12 +133,16 @@ class OrderManager:
     async def run_loop(self):
         ctr = 0
         while True:
-            sys.stdout.write("-----\n")
-            sys.stdout.flush()
+            # sys.stdout.write("-----\n")
+            # sys.stdout.flush()
 
-            await trio.sleep(LOOP_INTERVAL)
+            # update & display position on each loop
+            # self.refresh_position_details()
 
-            # retrieve position on each loop
-            self.display_positions()
-            print("lolol ", ctr)
+            # print("lolol ",ctr)
             ctr = ctr+1
+
+            print("deribot loop has run: time", time.perf_counter())
+
+            # await trio.sleep(LOOP_INTERVAL)
+            await asyncio.sleep(1)
