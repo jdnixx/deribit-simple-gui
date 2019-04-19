@@ -1,5 +1,2 @@
-/deribit_api.egg-info/*
-/dist/*
-/build/*
 *.pyc
-.idea/workspace.xml
+.idea/
