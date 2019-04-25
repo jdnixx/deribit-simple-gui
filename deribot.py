@@ -1,5 +1,5 @@
 """
-Deribit Bot - DERIBOT
+DERIBOT - Deribit Bot
 
 A class to hold various features of the bot (using the functions in deribit_api.py),
 and execute them in a loop.
@@ -30,6 +30,7 @@ PATH_TO_KEYFILE = "../deribit_keys.txt" # assumes keyfile is in parent dir
 with open(PATH_TO_KEYFILE, "r") as f:
     deribit_key = f.readline().strip()
     deribit_secret = f.readline().strip()
+
     optional_test = f.readline().strip()
     if optional_test == "test":
         deribit_testnet = "https://test.deribit.com"
