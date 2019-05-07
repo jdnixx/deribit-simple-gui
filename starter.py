@@ -8,8 +8,9 @@ I'm experimenting with GUI changes, so this separates the bot startup from the T
 """
 import time
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
-from window_marketbuy import WindowMarketbuy, tk
+from tkinter_gui import WindowMarketbuy, tk
 from deribot import OrderManager
 
 import random
@@ -21,32 +22,36 @@ INSTRUMENT = 'BTC-PERPETUAL'
 LOOP_INTERVAL = 0.5
 
 # The Main Loop
-loop = asyncio.get_event_loop()
+# loop = asyncio.get_event_loop()
+
 # OrderManager instance
 om = OrderManager(INSTRUMENT)
-# WindowMarketbuy instance
-gui = WindowMarketbuy(om)  # send OrderManager to Window
+# assign the OrderManager across all Windows
+WindowMarketbuy.om = om
+guiroot = WindowMarketbuy()
 
+
+### TKINTER SETUP ###
 
 # "Add Button" button; purely for testing
 def dynamically_add_buttons():
-    gui.new_marketbutton(random.choice([100,200,300,400,500]),
-                         random.choice(["buy", "sell"]))
-    gui.place_buttons()
-
-
-addbutton = tk.Button(gui.frame, text="Add A Button :)", command=lambda: dynamically_add_buttons())
-gui.buttons.append(addbutton)
-
+    guiroot.add_button(random.choice([
+        guiroot.new_buy_market_button(random.choice([100, 200, 300, 400, 500])),
+        guiroot.new_sell_market_button(random.choice([100, 200, 300, 400, 500]))
+    ]))
+    guiroot.place_buttons()
 
 
 # buttons creation
-
-mktbuy_1 = gui.new_marketbutton(1000, "buy")
+dynamicallyaddbuttonbutton = tk.Button(guiroot.frame, text="Add A Button :)",
+                                       command=lambda: dynamically_add_buttons())
+# guiroot.add_button(dynamicallyaddbuttonbutton)
+mktbuy_1 = guiroot.new_buy_market_button(1000)
+# addition to root
+guiroot.add_button(dynamicallyaddbuttonbutton, mktbuy_1)
 
 # grid placements
-
-gui.place_buttons()
+guiroot.place_buttons()
 
 # mktbuy_1.grid(row=0, ipadx=5, ipady=5, padx=5, pady=5)
 
@@ -55,10 +60,15 @@ gui.place_buttons()
 #
 # button_s1k.grid(row=0, column=1, ipadx=5, ipady=5, padx=5, pady=5)
 
+
 async def main():
-    omrun = asyncio.create_task(om.run())
-    runtk = asyncio.create_task(gui.run_tk())
-    await asyncio.gather(omrun, runtk)
+    om_run = asyncio.create_task(om.run())      # ordermanager loop function
+    tk_run = asyncio.create_task(guiroot.run())     # tkinter loop function
+    await asyncio.gather(om_run, tk_run)
+
+    # loop = asyncio.get_running_loop()
+    # om_result = await loop.run_in_executor(ThreadPoolExecutor(), om.run)
+    # gui.mainloop()
 
 
 if __name__ == '__main__':

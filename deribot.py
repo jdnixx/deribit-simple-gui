@@ -4,7 +4,6 @@ DERIBOT - Deribit Bot
 A class to hold various features of the bot (using the functions in deribit_api.py),
 and execute them in a loop.
 """
-import sys
 import time
 import asyncio
 from deribit_api import RestClient
@@ -19,7 +18,7 @@ TICK_SIZE = 0.25
 
 """
 Deribit Client (deribit_api) setup
----
+
 Keyfile must have at least 2 lines:
     key on the first line
     secret on the second line
@@ -37,53 +36,37 @@ with open(PATH_TO_KEYFILE, "r") as f:
     else:
         deribit_testnet = None
 
-CLIENT = RestClient(deribit_key, deribit_secret, deribit_testnet) # key, secret, URL
-# self.client.index()
-# self.client.account()
+CLIENT = RestClient(deribit_key, deribit_secret, deribit_testnet)   # key, secret, URL
 
 
 class OrderManager:
-    '''
-
-    '''
+    """
+    Interface containing all the main "bot"-type (user-facing) methods
+    """
     def __init__(self, instrument):
         self.instrument = instrument
 
         self.client = CLIENT
         self.client.index()
         self.client.account()
-        self.refresh_position_details()
-        print("^Init run!\n")
 
-    async def run(self):
-        try:
-            await self.run_loop()
-        except KeyboardInterrupt:
-            sys.exit()
+        # initialize position var
+        self.position = self.get_position_details()     # this will also run on each async loop in starter.py()
+        self.ctr = 0
+
+        print("^OrderManager.__init__() completed run!\n")
 
     def qty(self, amt):
-        '''
-        Checks if instrument is BTC-PERPETUAL and if so, returns $10 contracts (instead of $1)
-
+        """
+        Checks if instrument is BTC-PERPETUAL and if so, returns a quantity of $10 contracts (instead of $1)
         :param amt: the amount of USD to be converted into $10 contracts
-        '''
+        :return:
+        """
+
         if self.instrument == 'BTC-PERPETUAL':
             return amt / 10
         else:
             return amt
-
-    def get_position(self):
-        return self.client.positions()[0]
-
-    def refresh_position_details(self):
-        pos = self.get_position()
-        self.pos_size_contracts = pos['size']
-        self.pos_amt_USD = pos['amount']
-        self.entry = pos['averagePrice']
-        self.liq_price = pos['estLiqPrice']
-
-        # purely for console logging purposes - should be replaced with
-        print("%d USD " % self.pos_amt_USD + pos['direction'] + " from entry %.2f" % self.entry)
 
     def short_limit_exceeded(self):
         return
@@ -91,10 +74,35 @@ class OrderManager:
     def long_limit_exceeded(self):
         return
 
+    ### POSITION METHODS ###
+    def _get_position(self):
+        """
+        internal method for retrieving current position data from client
+        :return: dict of your first current position
+        """
+        return self.client.positions()[0]
+
+    def _get_orderbook(self):
+        return self.client.getorderbook(self.instrument)
+
+    def get_position_details(self):
+        pos = self._get_position()
+        amt_USD = int(pos['amount'])
+        direction = pos['direction']
+        entry = pos['averagePrice']
+        liq_price = pos['estLiqPrice']
+
+        print("{:d} USD {:s} from entry ${:.2f}. (Liquidation at ~${:.2f})".format(amt_USD, direction, entry, liq_price))
+        return pos
+        # # prints every 10 seconds
+        # await asyncio.sleep(10)
+
+    ### ORDER BOOK METHODS ###
     def get_highest_bid(self):
-        book = self.client.getorderbook(self.instrument)
+        book = self._get_orderbook()
         return book['bids'][0]['price']
 
+    ### MAKE-ORDER METHODS ###
     def market_buy(self, amt):
         return lambda: self.client.buy(self.instrument, "market", self.qty(amt))
 
@@ -113,8 +121,14 @@ class OrderManager:
     def limit_sell(self, amt, price, postOnly=None):
         return lambda: self.client.sell(self.instrument, "limit", self.qty(amt), price, postOnly)
 
+
+    ### STOPS (LOOP) METHODS ###
     def doomsday_stop_monitor(self):
-        return
+        pass
+
+    async def limit_chaser_loop(self):
+        print(self.get_highest_bid())
+        print("ok bid gotten")
 
     async def limit_chase_buy(self, amt):
         startprice = self.get_highest_bid()
@@ -126,24 +140,19 @@ class OrderManager:
 
         await self.limit_chaser_loop
 
-    async def limit_chaser_loop(self):
-        print(self.get_highest_bid())
-        await trio.sleep(5)
-        print("ok bid gotten")
+
+
+    ### MAIN ORDERMANAGER METHODS ###
+    async def run(self):
+        while True:
+            await self.run_loop()
 
     async def run_loop(self):
-        ctr = 0
-        while True:
-            # sys.stdout.write("-----\n")
-            # sys.stdout.flush()
+        # update & display position
+        # await self.print_position_details()
+        self.get_position_details()
 
-            # update & display position on each loop
-            # self.refresh_position_details()
-
-            # print("lolol ",ctr)
-            ctr = ctr+1
-
-            print("deribot loop has run: time", time.perf_counter())
-
-            # await trio.sleep(LOOP_INTERVAL)
-            await asyncio.sleep(1)
+        print("deribot loop has run: @ time {0} (ctr = {1})".format(time.perf_counter(), self.ctr))
+        self.ctr += 1
+        # loop every LOOP_INTERVAL seconds
+        await asyncio.sleep(0.5)

@@ -1,7 +1,7 @@
 import tkinter as tk
 import time
 import asyncio
-import trio
+import concurrent.futures
 
 """
 INITIAL DECLARATIONS
@@ -21,84 +21,98 @@ EVENT CALLS
 def left_click(event):
     print("left")
 
-
 # bind leftclick to
 # frame.bind("<Button-1>", left_click)
-
 
 """
 TKINTER STUFF
 """
 
-
-# ACTS AS THE ROOT
-# functionally the same as: root = tk.Tk()
+# ACTS AS THE ROOT: i.e. root = tk.Tk()
 class WindowMarketbuy(tk.Tk):
-    def __init__(self, ordermanager):
-        tk.Tk.__init__(self)
+    om = None
+    def __init__(self):
+        super().__init__()
         self.geometry("%dx%d+%d+%d" % (WIDTH, HEIGHT, 0, -1000))
 
-        # set OrderManager object
-        self.om = ordermanager
+        # assign original OrderManager instance (created in starter.py)
+        self.om = WindowMarketbuy.om
 
-        # CREATE THE MAIN FRAME !!!
-        self.frame = self.NewFrame(self, bg='lightblue')
-
-        """
-        BUTTONS
-        """
-        # create buttons dict
-        self.buttons = []
-
-        # packs
+        ### TKINTER ELEMENTS CREATION ###
+        self.frame = tk.Frame(self, bg='lightblue')
         self.frame.place(relwidth=0.5, relheight=0.8, relx=0.1, rely=0.1)
         self.textbox = tk.Text(self.frame)
         self.textbox.place(relx=0, rely=0.5, relwidth=0.9, relheight=0.4)
-
-    class NewFrame(tk.Frame):
-        def __init__(self, master, **kwargs):
-            tk.Frame.__init__(self, master, **kwargs)
-
-    def new_marketbutton(self, amt, ordertype=None):
-        newbutton = tk.Button(self.frame)
-        if ordertype == "buy":
-            newbutton.config(command=self.om.market_buy(amt),
-                             text="Market Buy %d" % amt,
-                             bg="lightgreen",
-                             activebackground="green")
-        elif ordertype == "sell":
-            newbutton.config(command=self.om.market_sell(amt),
-                             text="Market Sell %d" % amt,
-                             bg="firebrick",
-                             activebackground="maroon")
-        else:
-            raise TypeError('Button ordertype required ("buy" or "sell")')
-        self.buttons.append(newbutton)
-
-    class GenericButtonFactory(tk.Button):
-        def __init__(self):
-            tk.Button.__init__(self.master)
+        # create buttons dict
+        self.buttons = []
 
     def place_buttons(self):
         for b in self.buttons:
             b.grid(ipadx=5, ipady=5, padx=5, pady=5)
 
+    def add_button(self, *buttons):
+        """add one or multiple Button objects."""
+        for b in buttons:
+            self.buttons.append(b)
 
-    async def run_tk(self, interval=0.020):
-        """
-        Substitutes for root.mainloop() in tkinter
-        Makes it async, basically
-        :param: interval = 0.020 works well
-        """
+    def new_buy_market_button(self, amt):
+        b = MarketBuyButton(self.frame)
+        b.amt = amt # have to run config again???
+        return b
+
+    def new_sell_market_button(self, amt):
+        b = MarketSellButton(self.frame)
+        b.amt = amt
+        return b
+
+    def new_buy_limitchase_button(self, amt, max_ticks):
+        b = LimitchaseBuyButton(self.frame)
+
+    # class NewFrame(tk.Frame):
+    #     def __init__(self, master, **kwargs):
+    #         tk.Frame.__init__(self, master, **kwargs)
+
+    async def run(self):
         while True:
-            # limitbuy.update_price()
+            await self.run_tk()
 
-            self.update()
-            await asyncio.sleep(interval)
+    async def run_tk(self, interval=0.02):
+        """
+        Substitutes for root.mainloop() in tkinter. (Makes it async, basically)
+        :param: interval = to sleep, 0.020 works well (20ms)
+        """
+        # limitbuy.update_price()
 
-            # print("GUI loop has run: time", time.perf_counter())
+        self.update()
+        print("GUI loop has run: @ time {0}".format(time.perf_counter()))
+        await asyncio.sleep(interval)
 
 
+class GenericButtonFactory(tk.Button):
+    def __init__(self, master):
+        super().__init__(master)
+        self.amt = 0
+
+class MarketBuyButton(GenericButtonFactory):
+    def __init__(self, master):
+        super().__init__(master)
+        self.config(text="Market Buy %d" % self.amt,
+                    bg="lightgreen",
+                    activebackground="green")
+
+class MarketSellButton(GenericButtonFactory):
+    def __init__(self, master):
+        super().__init__(master)
+        self.config(text="Market Sell %d" % self.amt,
+                    bg="firebrick",
+                    activebackground="maroon")
+
+class LimitchaseBuyButton(GenericButtonFactory):
+    def __init__(self, master):
+        super().__init__(master)
+        self.config(text="Limit CHASE Buy %d" % self.amt,
+                    bg="lightgreen",
+                    activebackground="green")
 """
 BUTTON TYPES
 inherit from parent tk.Button
