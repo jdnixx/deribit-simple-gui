@@ -3,11 +3,7 @@ import time
 import asyncio
 import concurrent.futures
 
-"""
-INITIAL DECLARATIONS
-"""
-INSTRUMENT = 'BTC-PERPETUAL'
-LOOP_INTERVAL = 0.5
+LOOP_INTERVAL = 0.020   # ms
 
 # tk.Panel dimensions
 HEIGHT = 700
@@ -16,31 +12,28 @@ WIDTH = 800
 """
 EVENT CALLS
 """
-
-
 def left_click(event):
     print("left")
 
 # bind leftclick to
 # frame.bind("<Button-1>", left_click)
 
-"""
-TKINTER STUFF
-"""
-
 # ACTS AS THE ROOT: i.e. root = tk.Tk()
 class WindowMarketbuy(tk.Tk):
     om = None
     def __init__(self):
+        # assign original OrderManager instance (created in starter.py)
+        self.om = __class__.om
+        # tk.Tk (root) init
         super().__init__()
         self.geometry("%dx%d+%d+%d" % (WIDTH, HEIGHT, 0, -1000))
 
-        # assign original OrderManager instance (created in starter.py)
-        self.om = WindowMarketbuy.om
+
 
         ### TKINTER ELEMENTS CREATION ###
         self.frame = tk.Frame(self, bg='lightblue')
         self.frame.place(relwidth=0.5, relheight=0.8, relx=0.1, rely=0.1)
+
         self.textbox = tk.Text(self.frame)
         self.textbox.place(relx=0, rely=0.5, relwidth=0.9, relheight=0.4)
         # create buttons dict
@@ -76,7 +69,7 @@ class WindowMarketbuy(tk.Tk):
         while True:
             await self.run_tk()
 
-    async def run_tk(self, interval=0.02):
+    async def run_tk(self, interval=0.2):
         """
         Substitutes for root.mainloop() in tkinter. (Makes it async, basically)
         :param: interval = to sleep, 0.020 works well (20ms)

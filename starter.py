@@ -10,8 +10,9 @@ import time
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
+from extras.position_monitor import Monitor
+from ordermanager_interface import OrderManager
 from tkinter_gui import WindowMarketbuy, tk
-from deribot import OrderManager
 
 import random
 
@@ -21,13 +22,15 @@ INITIAL DECLARATIONS
 INSTRUMENT = 'BTC-PERPETUAL'
 LOOP_INTERVAL = 0.5
 
-# The Main Loop
-# loop = asyncio.get_event_loop()
 
 # OrderManager instance
 om = OrderManager(INSTRUMENT)
-# assign the OrderManager across all Windows
+
+# assign same om object across all Monitor and Window instances
+Monitor.om = om
 WindowMarketbuy.om = om
+
+pm = Monitor()
 guiroot = WindowMarketbuy()
 
 
@@ -42,15 +45,10 @@ def dynamically_add_buttons():
     guiroot.place_buttons()
 
 
-# buttons creation
 dynamicallyaddbuttonbutton = tk.Button(guiroot.frame, text="Add A Button :)",
                                        command=lambda: dynamically_add_buttons())
-# guiroot.add_button(dynamicallyaddbuttonbutton)
 mktbuy_1 = guiroot.new_buy_market_button(1000)
-# addition to root
 guiroot.add_button(dynamicallyaddbuttonbutton, mktbuy_1)
-
-# grid placements
 guiroot.place_buttons()
 
 # mktbuy_1.grid(row=0, ipadx=5, ipady=5, padx=5, pady=5)
@@ -62,13 +60,16 @@ guiroot.place_buttons()
 
 
 async def main():
-    om_run = asyncio.create_task(om.run())      # ordermanager loop function
-    tk_run = asyncio.create_task(guiroot.run())     # tkinter loop function
+    om_run = asyncio.create_task(om.run())
+    pm_run = asyncio.create_task(pm.run())
+    tk_run = asyncio.create_task(guiroot.run())
     await asyncio.gather(om_run, tk_run)
+    print("blerp!!")
+    await asyncio.sleep(3)
 
-    # loop = asyncio.get_running_loop()
-    # om_result = await loop.run_in_executor(ThreadPoolExecutor(), om.run)
-    # gui.mainloop()
+    # while True:
+    #     await pm_run
+    #     await tk_run
 
 
 if __name__ == '__main__':
