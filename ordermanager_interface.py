@@ -5,6 +5,7 @@ Order Manager Interface - deribit API client wrapper, with my own custom-built f
 import time
 import asyncio
 from extras.deribit_api import RestClient
+from extras.orders import *
 from extras.position_monitor import Monitor
 
 # interval (in seconds) for run_loop()
@@ -29,9 +30,12 @@ class OrderManager:
         self.instrument = instrument
         self.ticksize = TICK_SIZES[instrument]
 
-        self.client = create_client()
+        self.client = NewClient()
         self.client.index()
         self.client.account()
+
+        Order.instrument = self.instrument
+        Order.client = self.client
 
         # self.pm = Monitor()           nope, this is for spawning individually
 
@@ -62,6 +66,7 @@ class OrderManager:
     def long_limit_exceeded(self):
         return
 
+
     ### POSITION METHODS ###
     def get_position(self):
         """
@@ -87,15 +92,14 @@ class OrderManager:
     def get_orderbook(self):
         return self.client.getorderbook(self.instrument)
 
-    def get_highest_bid_price(self):
+    def get_spread_price(self, side):
         book = self.get_orderbook()
-        return book['bids'][0]['price']
-
-    def get_highest_ask_price(self):
-        book = self.get_orderbook()
-        return book['asks'][0]['price']
+        return book[BOOK_SIDE_ORDERTYPE[side]][0]['price']
 
     ### PLACE-ORDER METHODS ###
+    def market(self, side, amt):
+        return MarketOrder(side, amt)
+
     def market_buy(self, amt):
         return lambda: self.client.buy(self.instrument, "market", self.qty(amt))
 
@@ -116,13 +120,14 @@ class OrderManager:
 
 
     ### SPECIAL ORDERS ###
-    async def limit_chase_buy(self, amt):
-        startprice = self.get_highest_bid()
-        price = startprice
+    async def limit_chase_buy(self, side, amt):
+        startprice = self.get_spread_price(side)
         order = self.limit_buy(amt, startprice, postOnly=True)['order']
         orderid = order['orderId']
-        price = order['price']
+        # price = order['price']
         print(order)
+        while True:
+
 
         await self.limit_chaser_loop
 
@@ -153,7 +158,7 @@ class OrderManager:
 
 
 
-def create_client():
+class NewClient(RestClient):
     """
     Deribit Client setup
 
@@ -164,17 +169,18 @@ def create_client():
 
     :return: an instance of the Deribit RestClient
     """
-    path_to_keyfile = "../deribit_keys.txt"  # assumes keyfile is in parent dir
+    def __init__(self):
 
-    with open(path_to_keyfile, "r") as f:
-        deribit_key = f.readline().strip()
-        deribit_secret = f.readline().strip()
+        path_to_keyfile = "../deribit_keys.txt"  # assumes keyfile is in parent dir
 
-        optional_test = f.readline().strip()
-        if optional_test == "test":
-            deribit_testnet = "https://test.deribit.com"
-        else:
-            deribit_testnet = None
+        with open(path_to_keyfile, "r") as f:
+            deribit_key = f.readline().strip()
+            deribit_secret = f.readline().strip()
 
-    client = RestClient(deribit_key, deribit_secret, deribit_testnet)  # key, secret, URL
-    return client
+            optional_test = f.readline().strip()
+            if optional_test == "test":
+                deribit_testnet = "https://test.deribit.com"
+            else:
+                deribit_testnet = None
+
+        super().__init__(deribit_key, deribit_secret, deribit_testnet)  # key, secret, URL
