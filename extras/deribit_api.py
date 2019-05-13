@@ -216,3 +216,11 @@ class RestClient(object):
             options["startTradeId"] = startTradeId
         
         return self.request("/api/v1/private/tradehistory", options)
+
+
+    def orderstate(self, orderId):
+        options = {
+            "orderId": orderId
+        }
+
+        return self.request("/api/v1/private/orderstate", options)

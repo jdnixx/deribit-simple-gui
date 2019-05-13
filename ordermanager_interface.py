@@ -100,11 +100,14 @@ class OrderManager:
     def market(self, side, amt):
         return MarketOrder(side, amt)
 
-    def market_buy(self, amt):
-        return lambda: self.client.buy(self.instrument, "market", self.qty(amt))
+    # def market_buy(self, amt):
+    #     return lambda: self.client.buy(self.instrument, "market", self.qty(amt))
 
-    def market_sell(self, amt):
-        return lambda: self.client.sell(self.instrument, "market", self.qty(amt))
+    def limit(self, side, amt, price, postOnly=False):
+        return LimitOrder(side, amt, price, postOnly)
+
+    # def limit_sell(self, amt, price, postOnly=None):
+    #     return lambda: self.client.sell(self.instrument, "limit", self.qty(amt), price, postOnly)
 
     def stop_market_buy(self, amt, stopPx, reduce_only=None):
         return self.client.buy(self.instrument, "stop_market", self.qty(amt), stopPx, reduce_only)
@@ -112,24 +115,19 @@ class OrderManager:
     def stop_market_sell(self, amt, stopPx, reduce_only=None):
         return self.client.sell(self.instrument, "stop_market", self.qty(amt), stopPx, reduce_only)
 
-    def limit_buy(self, amt, price, postOnly=None):
-        return lambda: self.client.buy(self.instrument, "limit", self.qty(amt), price, postOnly)
-
-    def limit_sell(self, amt, price, postOnly=None):
-        return lambda: self.client.sell(self.instrument, "limit", self.qty(amt), price, postOnly)
-
 
     ### SPECIAL ORDERS ###
-    async def limit_chase_buy(self, side, amt):
+    async def limit_chase(self, side, amt):
         startprice = self.get_spread_price(side)
-        order = self.limit_buy(amt, startprice, postOnly=True)['order']
-        orderid = order['orderId']
-        # price = order['price']
-        print(order)
-        while True:
+        ord_limitchase = LimitChaser(side, amt, startprice, postOnly=True)
+        print("LimitChaser obj (from OrderManager) self.order: ", ord_limitchase.order)
 
-
-        await self.limit_chaser_loop
+        # start loop
+        while not ord_limitchase.is_filled():
+            current_spread_price = self.get_spread_price(side)
+            ord_limitchase.check_spread_and_adjust(current_spread_price)
+            await asyncio.sleep(1)
+        return True  # order must be filled
 
 
     ### STOPS (LOOP) METHODS ###
@@ -143,8 +141,8 @@ class OrderManager:
     ### MAIN ORDERMANAGER METHODS ###
     async def run(self):
 
-        while True:
-            await self.run_loop()
+        # while True:               # removed this loop, instead placed loop in WindowMarketBuy.run()
+        await self.run_loop()
 
     async def run_loop(self):
         # update & display position
