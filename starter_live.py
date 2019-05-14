@@ -8,6 +8,7 @@ I'm experimenting with GUI changes, so this separates the bot startup from the T
 """
 import asyncio
 
+import ordermanager_interface
 from tkinter_gui import WindowMarketbuy, tk
 
 import random
@@ -15,6 +16,7 @@ import random
 """
 INITIAL DECLARATIONS
 """
+INSTRUMENT = 'ETH-PERPETUAL'
 # LOOP_INTERVAL = 0.5
 
 
@@ -26,7 +28,9 @@ INITIAL DECLARATIONS
 # WindowMarketbuy.om = om
 
 # pm = Monitor()
-guiroot = WindowMarketbuy()
+client = ordermanager_interface.NewClient('../deribit_keys_live.txt')
+om = ordermanager_interface.OrderManager(INSTRUMENT, client)
+guiroot = WindowMarketbuy(om)
 
 
 ### TKINTER SETUP ###

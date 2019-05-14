@@ -26,21 +26,21 @@ class OrderManager:
 
     :param instrument: the swap to be traded on ('BTC-PERPETUAL', 'ETH-PERPETUAL')
     """
-    def __init__(self, instrument):
+    def __init__(self, instrument, client=None):
         self.instrument = instrument
-        self.ticksize = TICK_SIZES[instrument]
+        self.ticksize = TICK_SIZES[instrument]  # not used yet
 
-        self.client = NewClient()
+        if client:
+            self.client = client
+        else:
+            self.client = NewClient()
         self.client.index()
         self.client.account()
 
-        Order.instrument = self.instrument
-        Order.client = self.client
+        # Order.instrument = self.instrument
+        # Order.client = self.client
 
         # self.pm = Monitor()           nope, this is for spawning individually
-
-
-
 
         # initialize position var
         # self.position = self.get_position_details()     # this will also run on each async loop in starter.py()
@@ -126,7 +126,7 @@ class OrderManager:
         while not ord_limitchase.is_filled():
             current_spread_price = self.get_spread_price(side)
             ord_limitchase.check_spread_and_adjust(current_spread_price)
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.1)
         return True  # order must be filled
 
 
@@ -167,9 +167,9 @@ class NewClient(RestClient):
 
     :return: an instance of the Deribit RestClient
     """
-    def __init__(self):
+    def __init__(self, path_to_keyfile="../deribit_keys.txt"):
 
-        path_to_keyfile = "../deribit_keys.txt"  # assumes keyfile is in parent dir
+        # assumes keyfile is in parent dir
 
         with open(path_to_keyfile, "r") as f:
             deribit_key = f.readline().strip()
