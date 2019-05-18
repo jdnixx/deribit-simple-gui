@@ -15,6 +15,7 @@ import random
 """
 INITIAL DECLARATIONS
 """
+INSTRUMENT = 'BTC-PERPETUAL'
 # LOOP_INTERVAL = 0.5
 
 
@@ -26,31 +27,46 @@ INITIAL DECLARATIONS
 # WindowMarketbuy.om = om
 
 # pm = Monitor()
+# client = ordermanager_interface.NewClient('../deribit_keys.txt')
+# om = ordermanager_interface.OrderManager(INSTRUMENT, client)
 guiroot = WindowMarketbuy()
 
 
-### TKINTER SETUP ###
+"""
+TKINTER SETUP
+"""
 
-# "Add Button" button; purely for testing
+### "ADD BUTTON" BUTTON ###
+# 'amount' entry box
+addbtn_entry = tk.Entry(guiroot.frame, exportselection=0)
+
+# button creation & placement
 def dynamically_add_buttons():
-    guiroot.add_button(random.choice([
-        guiroot.new_buy_market_button(random.choice([100, 200, 300, 400, 500])),
-        guiroot.new_sell_market_button(random.choice([100, 200, 300, 400, 500]))
-    ]))
+    guiroot.add_button(guiroot.new_limitchase_button('buy', addbtn_entry.get()))
     guiroot.place_buttons()
+# def dynamically_add_buttons():
+#     guiroot.add_button(random.choice([
+#         guiroot.new_buy_market_button(random.choice([100, 200, 300, 400, 500])),
+#         guiroot.new_sell_market_button(random.choice([100, 200, 300, 400, 500]))
+#     ]))
+#     guiroot.place_buttons()
 
 
 dynamicallyaddbuttonbutton = tk.Button(guiroot.frame, text="Add A Button :)",
-                                       command=lambda: dynamically_add_buttons())
+                                       command=lambda : dynamically_add_buttons())
 
 
 
 
 
 mktbuy_1 = guiroot.new_market_button('buy', 10)
-limitchase_1 = guiroot.new_limitchase_button('buy', 10)
-guiroot.add_button(dynamicallyaddbuttonbutton, mktbuy_1, limitchase_1)
+limitchase_1 = guiroot.new_limitchase_button('buy', 500)
+limitch_sell_1 = guiroot.new_limitchase_button('sell', 510)
+guiroot.add_button(dynamicallyaddbuttonbutton, mktbuy_1, limitchase_1, limitch_sell_1)
 guiroot.place_buttons()
+
+
+addbtn_entry.grid(row=0, column=1)
 
 # mktbuy_1.grid(row=0, ipadx=5, ipady=5, padx=5, pady=5)
 

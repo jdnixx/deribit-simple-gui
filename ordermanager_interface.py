@@ -4,8 +4,8 @@ Order Manager Interface - deribit API client wrapper, with my own custom-built f
 
 import time
 import asyncio
-from extras.deribit_api import RestClient
-from extras.orders import *
+from extras.deribit_api_async import RestClient
+from extras.orders_async import *
 from extras.position_monitor import Monitor
 
 # interval (in seconds) for run_loop()
@@ -89,22 +89,26 @@ class OrderManager:
         # await asyncio.sleep(10)
 
     ### ORDER BOOK METHODS ###
-    def get_orderbook(self):
-        return self.client.getorderbook(self.instrument)
+    async def get_orderbook(self):
+        return await self.client.getorderbook(self.instrument)
 
-    def get_spread_price(self, side):
-        book = self.get_orderbook()
+    async def get_spread_price(self, side):
+        book = await self.get_orderbook()
         return book[BOOK_SIDE_ORDERTYPE[side]][0]['price']
 
     ### PLACE-ORDER METHODS ###
-    def market(self, side, amt):
-        return MarketOrder(side, amt)
-
+    async def market_order(self, side, amt):
+        # return MarketOrder(side, amt)
+        return await MarketOrder().make_market_order(side, amt)
+        # mktord = MarketOrder(side, amt)
+        # print(mktord)
+        # print(mktord.task.result())
+        # return mktord
     # def market_buy(self, amt):
     #     return lambda: self.client.buy(self.instrument, "market", self.qty(amt))
 
-    def limit(self, side, amt, price, postOnly=False):
-        return LimitOrder(side, amt, price, postOnly)
+    async def limit(self, side, amt, price, postOnly=False):
+        return await LimitOrder().make_limit_order(side, amt, price, postOnly)
 
     # def limit_sell(self, amt, price, postOnly=None):
     #     return lambda: self.client.sell(self.instrument, "limit", self.qty(amt), price, postOnly)
@@ -117,16 +121,17 @@ class OrderManager:
 
 
     ### SPECIAL ORDERS ###
-    async def limit_chase(self, side, amt):
-        startprice = self.get_spread_price(side)
-        ord_limitchase = LimitChaser(side, amt, startprice, postOnly=True)
-        print("LimitChaser obj (from OrderManager) self.order: ", ord_limitchase.order)
+    async def limit_chase(self, side, amt, postOnly=True):
+        # startprice = self.get_spread_price(side)
+        limchase_instance = LimitChaser()
 
         # start loop
-        while not ord_limitchase.is_filled():
-            current_spread_price = self.get_spread_price(side)
-            ord_limitchase.check_spread_and_adjust(current_spread_price)
-            await asyncio.sleep(0.1)
+        await limchase_instance.make_limitchase_initial_order(side, amt, postOnly)
+
+        while not await limchase_instance.is_filled():
+            await limchase_instance.check_spread_and_adjust()
+            await asyncio.sleep(0.05)
+        print(limchase_instance.order)
         return True  # order must be filled
 
 
@@ -152,7 +157,7 @@ class OrderManager:
         print("deribot loop has run: @ time {0} (ctr = {1})".format(time.perf_counter(), self.ctr))
         self.ctr += 1
         # loop every LOOP_INTERVAL seconds
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(LOOP_INTERVAL)
 
 
 

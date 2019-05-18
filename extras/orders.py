@@ -39,7 +39,7 @@ class LimitChaser(LimitOrder):
         self.side = side
         self.order_current_price = price
         # set the order itself (instance of LimitOrder)
-        super().__init__(side, amt, self.order_current_price, postOnly)
+        super().__init__(side, amt, self.order_current_price, True)
         # self.order = is now accessible
         self.order_id = self.order['orderId']
 

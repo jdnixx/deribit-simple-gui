@@ -2,9 +2,10 @@ import tkinter as tk
 import time
 import asyncio
 # import concurrent.futures
+from threading import Timer
 
 from ordermanager_interface import OrderManager
-from extras.orders import *
+from extras.orders_async import *
 
 DEFAULT_INSTRUMENT = 'BTC-PERPETUAL'
 LOOP_INTERVAL = 0.020   # ms
@@ -13,6 +14,9 @@ LOOP_INTERVAL = 0.020   # ms
 # tk.Panel dimensions
 HEIGHT = 700
 WIDTH = 800
+
+# geom = "%dx%d+%d+%d" % (WIDTH, HEIGHT, 0, -1000)
+geom = "%dx%d" % (WIDTH, HEIGHT)
 
 """
 EVENT CALLS
@@ -26,24 +30,29 @@ def left_click(event):
 # ACTS AS THE ROOT: i.e. root = tk.Tk()
 class WindowMarketbuy(tk.Tk):
     om = OrderManager(DEFAULT_INSTRUMENT)
+
     def __init__(self, ordermanager=None):
         if ordermanager:
             __class__.om = ordermanager
         self.om = __class__.om
         # tk.Tk (root) init
         super().__init__()
-        self.geometry("%dx%d+%d+%d" % (WIDTH, HEIGHT, 0, -1000))
+        self.geometry(geom)
 
-        Order.instrument = self.om.instrument
-        Order.client = self.om.client
+        # Order.instrument = self.om.instrument
+        # Order.client = self.om.client
+
+        BuySellButton.om = self.om
+        Order.om = self.om
 
 
         ### TKINTER ELEMENTS CREATION ###
         self.frame = tk.Frame(self, bg='lightblue')
         self.frame.place(relwidth=0.5, relheight=0.8, relx=0.1, rely=0.1)
 
-        self.textbox = tk.Text(self.frame)
-        self.textbox.place(relx=0, rely=0.5, relwidth=0.9, relheight=0.4)
+        # self.textbox = tk.Text(self.frame)
+        # self.textbox.place(relx=0, rely=0.5, relwidth=0.9, relheight=0.4)
+
         # create buttons dict
         self.buttons = []
 
@@ -59,21 +68,24 @@ class WindowMarketbuy(tk.Tk):
 
     def new_market_button(self, side, amt):
         b = MarketButton(self.frame, side, amt)
-        # b.amt = amt # have to run config again???
         return b
 
     def new_limitchase_button(self, side, amt):
-        fn_limitchase = lambda: asyncio.create_task(self.om.limit_chase(side, amt))
-        b = LimitChaseButton(self.frame, side, amt, fn_limitchase)
-        # b.amt = amt # have to run config again???
+        b = LimitChaseButton(self.frame, side, amt)
         return b
 
 
     ### RUNTIME METHODS ###
     async def run(self):
+        # log_timer = Timer(3, lambda: print("GUI loop running: @ time {0}".format(time.perf_counter())))
+        # log_timer.start()
+        t = time.time()
         while True:
             await self.run_tk()
-            await self.om.run()
+            if time.time()-t > 3:
+                print("GUI loop running: @ time {0}".format(time.perf_counter()))
+                t = time.time()
+            # await self.om.run()
 
     async def run_tk(self):
         """
@@ -82,14 +94,16 @@ class WindowMarketbuy(tk.Tk):
         # limitbuy.update_price()
 
         self.update()
-        print("GUI loop has run: @ time {0}".format(time.perf_counter()))
-        await asyncio.sleep(LOOP_INTERVAL)
+        # print("GUI loop has run: @ time {0}".format(time.perf_counter()))
+        await asyncio.sleep(0)
 
 
 class BuySellButton(tk.Button):
-    def __init__(self, master, side):
+    om = None
+    def __init__(self, master, side, amt):
         super().__init__(master)
-        self.amt = 0
+        self.side = side
+        self.amt = amt
         if side == 'buy':
             self.config(text="<orderType> Buy %d" % self.amt,
                         bg="lightgreen",
@@ -103,15 +117,20 @@ class BuySellButton(tk.Button):
 
 class MarketButton(BuySellButton):
     def __init__(self, master, side, amt):
-        super().__init__(master, side)
-        self.amt = amt
-        self.config(text=f"Market {side} {self.amt}",
-                    command=lambda: MarketOrder(side, self.amt))
+        super().__init__(master, side, amt)
+        self.config(text=f"Market {self.side} {self.amt}",
+                    command=lambda : self._make())
+
+    def _make(self):
+        ordertask = asyncio.create_task(self.om.market_order(self.side, self.amt))
+        print(ordertask)
 
 class LimitChaseButton(BuySellButton):
-    def __init__(self, master, side, amt, fn_limitchase):
-        super().__init__(master, side)
-        self.amt = amt
-        self.config(text=f"Limit CHASE {side} {self.amt}",
-                    command=fn_limitchase)
-                    # command=lambda: asyncio.create_task(WindowMarketbuy.om.limit_chase(side, self.amt)))
+    def __init__(self, master, side, amt):
+        super().__init__(master, side, amt)
+        self.config(text=f"Limit CHASE {self.side} {self.amt}",
+                    command=lambda : self._make())
+
+    def _make(self):
+        ordertask = asyncio.create_task(self.om.limit_chase(self.side, self.amt))
+        print(ordertask)
