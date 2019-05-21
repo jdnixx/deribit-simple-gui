@@ -9,10 +9,6 @@ I'm experimenting with GUI changes, so this separates the bot startup from the T
 from utils import log
 logger = log.setup_custom_logger(__name__)
 
-#
-# BLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
-#
-
 logger.info("\n\n Begin")
 logger.info("STARTING PROGRAM")
 

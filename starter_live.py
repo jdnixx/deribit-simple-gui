@@ -31,7 +31,7 @@ INSTRUMENT = 'BTC-PERPETUAL'
 # WindowMarketbuy.om = om
 
 # pm = Monitor()
-client = ordermanager_interface.NewClient('../deribit_keys_live.txt')
+client = ordermanager_interface.NewWrapper('../deribit_keys_live.txt')
 om = ordermanager_interface.OrderManager(INSTRUMENT, client)
 guiroot = WindowMarketbuy(om)
 

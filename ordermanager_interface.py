@@ -5,7 +5,8 @@ Order Manager Interface - deribit API client wrapper, with my own custom-built f
 import time
 import asyncio
 
-from extras.deribit_api_async import RestClient
+# from extras.deribit_api_async import RestClient
+from cryptowrapper import Deribit
 from extras.orders_async import *
 
 from utils import log
@@ -36,7 +37,7 @@ class OrderManager:
         if client:
             self.client = client
         else:
-            self.client = NewClient()
+            self.client = NewWrapper()
         self.client.index()
         self.client.account()
 
@@ -178,16 +179,16 @@ class OrderManager:
 
 
 
-class NewClient(RestClient):
+class NewWrapper(Deribit):
     """
-    Deribit Client setup
+    Deribit API Client Wrapper setup
 
     Keyfile must have at least 2 lines:
         key on the first line
         secret on the second line
         (optional) "test" on the third line, if using the testnet
 
-    :return: an instance of the Deribit RestClient
+    :type: an instance of a Deribit() CryptoWrapper
     """
     def __init__(self, path_to_keyfile="../deribit_keys.txt"):
 
@@ -196,12 +197,14 @@ class NewClient(RestClient):
         with open(path_to_keyfile, "r") as f:
             deribit_key = f.readline().strip()
             deribit_secret = f.readline().strip()
-
             optional_test = f.readline().strip()
+
             if optional_test == "test":
                 deribit_testnet = "https://test.deribit.com"
             else:
                 deribit_testnet = None
 
-        super().__init__(deribit_key, deribit_secret, deribit_testnet)  # key, secret, URL
+        super().__init__(asynchronous=False,
+                         api_key=deribit_key,
+                         api_secret=deribit_secret)  # key, secret, URL
         logger.info('New Client created!')
