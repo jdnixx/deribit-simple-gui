@@ -121,7 +121,7 @@ class RestClient(object):
         return await self.request("/api/v1/private/account", {})
 
 
-    async def buy(self, instrument, ordertype, quantity, price=None, stopPx=None, reduce_only=None, postOnly=None,
+    async def buy(self, instrument, ordertype, quantity, price=None, stopPx=None, reduceOnly=None, postOnly=None,
             label=None):
         options = {
             "instrument": instrument,
@@ -133,19 +133,20 @@ class RestClient(object):
             options["price"] = price
         if stopPx:
             options["stopPx"] = stopPx
-        if reduce_only:
-            options["reduce_only"] = reduce_only
+        if reduceOnly:
+            options["reduce_only"] = reduceOnly
         if label:
             options["label"] = label
         if postOnly:
             options["postOnly"] = postOnly
 
-        logger.warning("Buy() order options: ", options)
+        logger.warning("Buy() order options: ")
+        logger.warning(options)
 
         return await self.request("/api/v1/private/buy", options)
 
 
-    async def sell(self, instrument, ordertype, quantity, price=None, stopPx=None, reduce_only=None, postOnly=None,
+    async def sell(self, instrument, ordertype, quantity, price=None, stopPx=None, reduceOnly=None, postOnly=None,
              label=None):
         options = {
             "instrument": instrument,
@@ -157,14 +158,15 @@ class RestClient(object):
             options["price"] = price
         if stopPx:
             options["stopPx"] = stopPx
-        if reduce_only:
-            options["reduce_only"] = reduce_only
+        if reduceOnly:
+            options["reduce_only"] = reduceOnly
         if label:
             options["label"] = label
         if postOnly:
             options["postOnly"] = postOnly
 
-        logger.warning("Sell() order options: ", options)
+        logger.warning("Sell() order options: ")
+        logger.warning(options)
 
         return await self.request("/api/v1/private/sell", options)
 

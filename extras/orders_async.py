@@ -83,7 +83,9 @@ class LimitOrder(Order):
     #     print("LimitOrder obj self.order: ", self.order)
 
     async def make_limit_order(self, side, amt, price, postOnly):
-        resp = await self._make_order(side, 'limit', amt, price, postOnly)
+        logger.warning("make_limit_order postOnly=")
+        logger.warning(postOnly)
+        resp = await self._make_order(side, 'limit', amt, price, postOnly=postOnly)
         self.order = resp['order']
         logger.info("Limit Order made, order: ")
         logger.info(self.order)

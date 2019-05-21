@@ -6,17 +6,20 @@ Main module that bootstraps the program.
 *currently used for testing, mostly*
 I'm experimenting with GUI changes, so this separates the bot startup from the Tkinter window
 """
+from utils import log
+logger = log.setup_custom_logger(__name__)
+
+logger.info("\n\n Begin")
+logger.info("STARTING PROGRAM")
+
+
 import asyncio
-
-import ordermanager_interface
-from tkinter_gui import WindowMarketbuy, tk
-
 import random
 
-"""
-INITIAL DECLARATIONS
-"""
-INSTRUMENT = 'ETH-PERPETUAL'
+from tkinter_gui import WindowMarketbuy, tk
+import ordermanager_interface
+
+INSTRUMENT = 'BTC-PERPETUAL'
 # LOOP_INTERVAL = 0.5
 
 
