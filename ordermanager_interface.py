@@ -4,9 +4,12 @@ Order Manager Interface - deribit API client wrapper, with my own custom-built f
 
 import time
 import asyncio
+
 from extras.deribit_api_async import RestClient
 from extras.orders_async import *
-from extras.position_monitor import Monitor
+
+from utils import log
+logger = log.setup_custom_logger(__name__)
 
 # interval (in seconds) for run_loop()
 LOOP_INTERVAL = 0.5
@@ -44,9 +47,9 @@ class OrderManager:
 
         # initialize position var
         # self.position = self.get_position_details()     # this will also run on each async loop in starter.py()
-        self.ctr = 0
+        # self.ctr = 0
 
-        print("^OrderManager.__init__() completed run!\n")
+        logger.info("OM object created!")
 
     def qty(self, amt):
         """
@@ -107,7 +110,7 @@ class OrderManager:
     # def market_buy(self, amt):
     #     return lambda: self.client.buy(self.instrument, "market", self.qty(amt))
 
-    async def limit(self, side, amt, price, postOnly=False):
+    async def limit(self, side, amt, price, postOnly):
         return await LimitOrder().make_limit_order(side, amt, price, postOnly)
 
     # def limit_sell(self, amt, price, postOnly=None):
@@ -121,18 +124,27 @@ class OrderManager:
 
 
     ### SPECIAL ORDERS ###
-    async def limit_chase(self, side, amt, postOnly=True):
+    async def limit_chase(self, side, amt):
         # startprice = self.get_spread_price(side)
         limchase_instance = LimitChaser()
 
         # start loop
-        await limchase_instance.make_limitchase_initial_order(side, amt, postOnly)
+        await limchase_instance.make_limitchase_initial_order(side, amt)
+
+        if side is 'buy':
+            price = 100000
+        elif side is 'sell':
+            price = 1
 
         while not await limchase_instance.is_filled():
-            await limchase_instance.check_spread_and_adjust()
+            logger.info("LimitChaser loop running, limchase.order: ", limchase_instance.order)
+            # await limchase_instance.check_spread_and_adjust()
+            await limchase_instance.spam_edit_order(price)
+
+            logger.info("LimitChaser loop sleeping for 50ms...")
             await asyncio.sleep(0.05)
-        print(limchase_instance.order)
-        return True  # order must be filled
+        logger.info("LimitChase done, final order: ",limchase_instance.order)
+        return limchase_instance.order  # order must be filled
 
 
     ### STOPS (LOOP) METHODS ###
@@ -144,18 +156,22 @@ class OrderManager:
 
 
     ### MAIN ORDERMANAGER METHODS ###
-    async def run(self):
-
-        # while True:               # removed this loop, instead placed loop in WindowMarketBuy.run()
-        await self.run_loop()
+    # async def run(self):
+    #     t = time.time()
+    #     while True:               # removed this loop, instead placed loop in WindowMarketBuy.run()
+    #         await self.run_loop()
+    #         if time.time() - t > 3:  # print every 3 seconds
+    #             logger.info("OM loop running: @ time {0}".format(time.perf_counter()))
+    #             t = time.time()
+    #         await self.run_loop()
 
     async def run_loop(self):
         # update & display position
         # await self.print_position_details()
         # self.get_position_details()
 
-        print("deribot loop has run: @ time {0} (ctr = {1})".format(time.perf_counter(), self.ctr))
-        self.ctr += 1
+        # print("deribot loop has run: @ time {0} (ctr = {1})".format(time.perf_counter(), self.ctr))
+        # self.ctr += 1
         # loop every LOOP_INTERVAL seconds
         await asyncio.sleep(LOOP_INTERVAL)
 
@@ -187,3 +203,4 @@ class NewClient(RestClient):
                 deribit_testnet = None
 
         super().__init__(deribit_key, deribit_secret, deribit_testnet)  # key, secret, URL
+        logger.info('New Client created!')

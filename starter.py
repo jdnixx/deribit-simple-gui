@@ -6,17 +6,20 @@ Main module that bootstraps the program.
 *currently used for testing, mostly*
 I'm experimenting with GUI changes, so this separates the bot startup from the Tkinter window
 """
+from utils import log
+logger = log.setup_custom_logger(__name__)
+
+logger.info("\n\n Begin")
+logger.info("STARTING PROGRAM")
+
 import asyncio
+import random
 
 from tkinter_gui import WindowMarketbuy, tk
 
-import random
-
-"""
-INITIAL DECLARATIONS
-"""
 INSTRUMENT = 'BTC-PERPETUAL'
 # LOOP_INTERVAL = 0.5
+
 
 
 # OrderManager instance
@@ -60,8 +63,8 @@ dynamicallyaddbuttonbutton = tk.Button(guiroot.frame, text="Add A Button :)",
 
 
 mktbuy_1 = guiroot.new_market_button('buy', 10)
-limitchase_1 = guiroot.new_limitchase_button('buy', 500)
-limitch_sell_1 = guiroot.new_limitchase_button('sell', 510)
+limitchase_1 = guiroot.new_limitchase_button('buy', 50)
+limitch_sell_1 = guiroot.new_limitchase_button('sell', 51)
 guiroot.add_button(dynamicallyaddbuttonbutton, mktbuy_1, limitchase_1, limitch_sell_1)
 guiroot.place_buttons()
 
@@ -77,9 +80,22 @@ addbtn_entry.grid(row=0, column=1)
 
 
 async def main():
-    tk_run = asyncio.create_task(guiroot.run())
     # om_run = asyncio.create_task(guiroot.om_run())
-    await asyncio.gather(tk_run)
+
+    # tk_run = asyncio.create_task(guiroot.run())
+    # await asyncio.gather(tk_run)
+
+    # try/except keeps program exit from printing an ugly stacktrace.
+    # Also adds a newline to the log on exit
+    try:
+        await guiroot.run()
+    except (KeyboardInterrupt, SystemExit, Exception) as e:
+        logger.error(e)
+        logger.warning("Program exit with above error.")
+        logger.warning("\n")
+    finally:
+        logger.warning("Program exit.")
+        logger.warning("\n")
 
     # while True:
     #     await pm_run
@@ -87,4 +103,5 @@ async def main():
 
 
 if __name__ == '__main__':
+    logger.info("asyncio.run(main()) STARTED!")
     asyncio.run(main())

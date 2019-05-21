@@ -1,19 +1,24 @@
 import tkinter as tk
-import time
 import asyncio
-# import concurrent.futures
-from threading import Timer
+import time
+from builtins import set
 
 from ordermanager_interface import OrderManager
 from extras.orders_async import *
 
+from utils import log
+logger = log.setup_custom_logger(__name__)
+
 DEFAULT_INSTRUMENT = 'BTC-PERPETUAL'
 LOOP_INTERVAL = 0.020   # ms
 #               ^^^^^ 0.020 works well (20ms)
+# LOG_LEVEL = logging.DEBUG
 
 # tk.Panel dimensions
 HEIGHT = 700
 WIDTH = 800
+
+
 
 # geom = "%dx%d+%d+%d" % (WIDTH, HEIGHT, 0, -1000)
 geom = "%dx%d" % (WIDTH, HEIGHT)
@@ -35,6 +40,7 @@ class WindowMarketbuy(tk.Tk):
         if ordermanager:
             __class__.om = ordermanager
         self.om = __class__.om
+
         # tk.Tk (root) init
         super().__init__()
         self.geometry(geom)
@@ -44,6 +50,7 @@ class WindowMarketbuy(tk.Tk):
 
         BuySellButton.om = self.om
         Order.om = self.om
+
 
 
         ### TKINTER ELEMENTS CREATION ###
@@ -66,6 +73,8 @@ class WindowMarketbuy(tk.Tk):
         for b in buttons:
             self.buttons.append(b)
 
+    # TYPES OF BUTTONS
+
     def new_market_button(self, side, amt):
         b = MarketButton(self.frame, side, amt)
         return b
@@ -77,15 +86,13 @@ class WindowMarketbuy(tk.Tk):
 
     ### RUNTIME METHODS ###
     async def run(self):
-        # log_timer = Timer(3, lambda: print("GUI loop running: @ time {0}".format(time.perf_counter())))
-        # log_timer.start()
         t = time.time()
         while True:
             await self.run_tk()
-            if time.time()-t > 3:
-                print("GUI loop running: @ time {0}".format(time.perf_counter()))
-                t = time.time()
             # await self.om.run()
+            if time.time()-t > 3:       # print every 3 seconds
+                logger.info("GUI loop running: @ time {0}".format(time.perf_counter()))
+                t = time.time()
 
     async def run_tk(self):
         """
@@ -114,6 +121,7 @@ class BuySellButton(tk.Button):
                         activebackground="maroon")
         else:
             raise ValueError("'side' parameter must be either 'buy' or 'sell'")
+        logger.info(f"{side.upper()} Button created, amt={amt}...with master={master}")
 
 class MarketButton(BuySellButton):
     def __init__(self, master, side, amt):
@@ -123,7 +131,7 @@ class MarketButton(BuySellButton):
 
     def _make(self):
         ordertask = asyncio.create_task(self.om.market_order(self.side, self.amt))
-        print(ordertask)
+        logger.info(f"Market button ordertask created: {ordertask}")
 
 class LimitChaseButton(BuySellButton):
     def __init__(self, master, side, amt):
@@ -133,4 +141,4 @@ class LimitChaseButton(BuySellButton):
 
     def _make(self):
         ordertask = asyncio.create_task(self.om.limit_chase(self.side, self.amt))
-        print(ordertask)
+        logger.info(f"LimitChase button ordertask created: {ordertask}")

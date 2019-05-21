@@ -3,6 +3,10 @@
 import time, hashlib, requests_async as requests, base64, sys, asyncio.locks
 from collections import OrderedDict
 
+from utils import log
+logger = log.setup_custom_logger(__name__)
+
+
 class RestClient(object):
     def __init__(self, key=None, secret=None, url=None):
         self.key = key
@@ -136,6 +140,8 @@ class RestClient(object):
         if postOnly:
             options["postOnly"] = postOnly
 
+        logger.warning("Buy() order options: ", [options])
+
         return await self.request("/api/v1/private/buy", options)
 
 
@@ -157,6 +163,8 @@ class RestClient(object):
             options["label"] = label
         if postOnly:
             options["postOnly"] = postOnly
+
+        logger.warning("Sell() order options: ", [options])
 
         return await self.request("/api/v1/private/sell", options)
 

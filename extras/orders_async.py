@@ -1,5 +1,8 @@
 import asyncio
 
+from utils import log
+logger = log.setup_custom_logger(__name__)
+
 BOOK_SIDE_ORDERTYPE = {
     'buy': 'bids',
     'sell': 'asks'
@@ -38,6 +41,7 @@ class Order:
 
     async def _make_order(self, side, *args, **kwargs):
         """ Makes an order (buy or sell) and returns a response object from the API """
+        logger.info(f"Sending request for client {side} with args: {args} and kwargs: {kwargs}...")
         if side == 'buy':
             return await self.om.client.buy(self.om.instrument, *args, **kwargs)
         elif side == 'sell':
@@ -76,9 +80,10 @@ class LimitOrder(Order):
     #
     #     print("LimitOrder obj self.order: ", self.order)
 
-    async def make_limit_order(self, side, amt, price, postOnly=False):
+    async def make_limit_order(self, side, amt, price, postOnly):
         resp = await self._make_order(side, 'limit', amt, price, postOnly)
         self.order = resp['order']
+        logger.info("Limit Order made, order: ", [self.order])
         return self.order
 
 class LimitChaser(LimitOrder):
@@ -86,25 +91,41 @@ class LimitChaser(LimitOrder):
         self.order_current_price = None
         super().__init__()
 
-    async def make_limitchase_initial_order(self, side, amt, postOnly=True):
+    # async def make_limitchase_initial_order(self, side, amt, postOnly=True):
+    #     self.side = side
+    #     self.amt = amt
+    #     initialprice = await self.om.get_spread_price(self.side)
+    #     await self.make_limit_order(self.side, self.amt, initialprice, postOnly)
+    #     # self.order = is now accessible
+    #     self.order_id = self.order['orderId']
+    #
+    #     print("LimitChaser obj self.order: ", self.order)
+
+    async def make_limitchase_initial_order(self, side, amt):
         self.side = side
         self.amt = amt
         initialprice = await self.om.get_spread_price(self.side)
-        await self.make_limit_order(self.side, self.amt, initialprice, postOnly)
+        await self.make_limit_order(self.side, self.amt, initialprice, postOnly=True)
+
         # self.order = is now accessible
         self.order_id = self.order['orderId']
-
-        print("LimitChaser obj self.order: ", self.order)
+        logger.info("LimitChaser initial order ran, self.order: ", [self.order])
 
     async def is_filled(self):
         # updates self.order on every run
         self.order = await self.om.client.orderstate(self.order_id)
-        return self.order['state'] is 'filled'
 
-    async def check_spread_and_adjust(self):
-        self.order_current_price = self.order['price']
-        current_spread_price = await self.om.get_spread_price(self.side)
-        quantity = self.order['quantity']
-        if ((current_spread_price > self.order_current_price) and (self.side is 'buy'))\
-                or ((current_spread_price < self.order_current_price) and (self.side is 'sell')):
-            await self.om.edit(self.order_id, quantity, current_spread_price)
+        state = self.order['state']
+        logger.info("Chceking order 'filled'; Order 'state' is: ", state)
+        return state is 'filled'
+
+    # async def check_spread_and_adjust(self):
+    #     self.order_current_price = self.order['price']
+    #     current_spread_price = await self.om.get_spread_price(self.side)
+    #     quantity = self.order['quantity']
+    #     if ((current_spread_price > self.order_current_price) and (self.side is 'buy'))\
+    #             or ((current_spread_price < self.order_current_price) and (self.side is 'sell')):
+    #         await self.om.client.edit(self.order_id, quantity, current_spread_price)
+
+    async def spam_edit_order(self, price):
+        await self.om.client.edit(self.order_id, self.amt, price)
