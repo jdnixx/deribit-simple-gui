@@ -41,7 +41,7 @@ class Order:
 
     async def _make_order(self, side, *args, **kwargs):
         """ Makes an order (buy or sell) and returns a response object from the API """
-        logger.info(f"Sending request for client {side} with args: {args} and kwargs: {kwargs}...")
+        logger.info(f"Sending request for client {side} with args={args} and kwargs={kwargs}...")
         if side == 'buy':
             return await self.om.client.buy(self.om.instrument, *args, **kwargs)
         elif side == 'sell':
@@ -68,6 +68,8 @@ class MarketOrder(Order):
     async def make_market_order(self, side, amt):
         resp = await self._make_order(side, 'market', amt)   # sets self.order
         self.order = resp['order']
+        logger.info("Market Order made, order:")
+        logger.info(self.order)
         return self.order
 
 class LimitOrder(Order):
@@ -83,7 +85,8 @@ class LimitOrder(Order):
     async def make_limit_order(self, side, amt, price, postOnly):
         resp = await self._make_order(side, 'limit', amt, price, postOnly)
         self.order = resp['order']
-        logger.info("Limit Order made, order: ", [self.order])
+        logger.info("Limit Order made, order: ")
+        logger.info(self.order)
         return self.order
 
 class LimitChaser(LimitOrder):
@@ -109,15 +112,20 @@ class LimitChaser(LimitOrder):
 
         # self.order = is now accessible
         self.order_id = self.order['orderId']
-        logger.info("LimitChaser initial order ran, self.order: ", [self.order])
+        logger.info("LimitChaser initial order ran, self.order: ")
+        logger.info(self.order)
 
     async def is_filled(self):
         # updates self.order on every run
         self.order = await self.om.client.orderstate(self.order_id)
 
         state = self.order['state']
-        logger.info("Chceking order 'filled'; Order 'state' is: ", state)
-        return state is 'filled'
+        logger.info("Chceking if order is filled; Order 'state' is: ")
+        logger.info(state)
+        logger.info("So 'filled' is (true or false):")
+        isfilled = state == 'filled'
+        logger.info(isfilled)
+        return state == 'filled'
 
     # async def check_spread_and_adjust(self):
     #     self.order_current_price = self.order['price']

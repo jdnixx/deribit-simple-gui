@@ -137,13 +137,14 @@ class OrderManager:
             price = 1
 
         while not await limchase_instance.is_filled():
-            logger.info("LimitChaser loop running, limchase.order: ", limchase_instance.order)
+            logger.info("limit_chase() is running...")
             # await limchase_instance.check_spread_and_adjust()
             await limchase_instance.spam_edit_order(price)
 
             logger.info("LimitChaser loop sleeping for 50ms...")
             await asyncio.sleep(0.05)
-        logger.info("LimitChase done, final order: ",limchase_instance.order)
+        logger.info("LimitChase done, final order: ")
+        logger.info(limchase_instance.order)
         return limchase_instance.order  # order must be filled
 
 

@@ -140,7 +140,7 @@ class RestClient(object):
         if postOnly:
             options["postOnly"] = postOnly
 
-        logger.warning("Buy() order options: ", [options])
+        logger.warning("Buy() order options: ", options)
 
         return await self.request("/api/v1/private/buy", options)
 
@@ -164,7 +164,7 @@ class RestClient(object):
         if postOnly:
             options["postOnly"] = postOnly
 
-        logger.warning("Sell() order options: ", [options])
+        logger.warning("Sell() order options: ", options)
 
         return await self.request("/api/v1/private/sell", options)
 
