@@ -1,12 +1,10 @@
-import tkinter as tk
-import asyncio
 import time
-from builtins import set
+import tkinter as tk
 
-from ordermanager_interface import OrderManager
 from extras.orders_async import *
-
+from ordermanager_interface import OrderManager
 from utils import log
+
 logger = log.setup_custom_logger(__name__)
 
 DEFAULT_INSTRUMENT = 'BTC-PERPETUAL'
@@ -34,12 +32,14 @@ def left_click(event):
 
 # ACTS AS THE ROOT: i.e. root = tk.Tk()
 class WindowMarketbuy(tk.Tk):
-    om = OrderManager(DEFAULT_INSTRUMENT)
-
     def __init__(self, ordermanager=None):
         if ordermanager:
-            __class__.om = ordermanager
-        self.om = __class__.om
+            self.om = ordermanager
+        else:
+            self.om = OrderManager(DEFAULT_INSTRUMENT)
+        # self.om = __class__.om
+        BuySellButton.om = self.om
+        Order.om = self.om
 
         # tk.Tk (root) init
         super().__init__()
@@ -48,8 +48,6 @@ class WindowMarketbuy(tk.Tk):
         # Order.instrument = self.om.instrument
         # Order.client = self.om.client
 
-        BuySellButton.om = self.om
-        Order.om = self.om
 
 
 
@@ -73,15 +71,14 @@ class WindowMarketbuy(tk.Tk):
         for b in buttons:
             self.buttons.append(b)
 
-    # TYPES OF BUTTONS
-
+    # button types
     def new_market_button(self, side, amt):
-        b = MarketButton(self.frame, side, amt)
-        return b
+        btn = MarketButton(self.frame, side, amt)
+        return btn
 
     def new_limitchase_button(self, side, amt):
-        b = LimitChaseButton(self.frame, side, amt)
-        return b
+        btn = LimitChaseButton(self.frame, side, amt)
+        return btn
 
 
     ### RUNTIME METHODS ###
@@ -112,11 +109,13 @@ class BuySellButton(tk.Button):
         self.side = side
         self.amt = amt
         if side == 'buy':
-            self.config(text="<orderType> Buy %d" % self.amt,
+            # self.config(text="<orderType> Buy %d" % self.amt,
+            self.config(None,
                         bg="lightgreen",
                         activebackground="green")
         elif side == 'sell':
-            self.config(text="<orderType> Sell %d" % self.amt,
+            # self.config(text="<orderType> Sell %d" % self.amt,
+            self.config(None,
                         bg="firebrick",
                         activebackground="maroon")
         else:

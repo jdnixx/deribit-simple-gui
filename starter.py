@@ -6,30 +6,19 @@ Main module that bootstraps the program.
 *currently used for testing, mostly*
 I'm experimenting with GUI changes, so this separates the bot startup from the Tkinter window
 """
+import asyncio
 from utils import log
 logger = log.setup_custom_logger(__name__)
 
 logger.info("\n\n Begin")
 logger.info("STARTING PROGRAM")
 
-import asyncio
-import random
-
+# import ordermanager_interface
 from tkinter_gui import WindowMarketbuy, tk
 
 INSTRUMENT = 'BTC-PERPETUAL'
 # LOOP_INTERVAL = 0.5
 
-
-
-# OrderManager instance
-# om = OrderManager(INSTRUMENT)
-
-# assign same om object across all Monitor and Window instances
-# Monitor.om = om
-# WindowMarketbuy.om = om
-
-# pm = Monitor()
 # client = ordermanager_interface.NewClient('../deribit_keys.txt')
 # om = ordermanager_interface.OrderManager(INSTRUMENT, client)
 guiroot = WindowMarketbuy()

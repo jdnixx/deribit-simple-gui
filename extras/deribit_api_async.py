@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import time, hashlib, requests_async as requests, base64, sys, asyncio.locks
+import time, hashlib, requests_async as requests, base64, sys
 from collections import OrderedDict
 
 from utils import log
@@ -121,7 +121,7 @@ class RestClient(object):
         return await self.request("/api/v1/private/account", {})
 
 
-    async def buy(self, instrument, ordertype, quantity, price=None, stopPx=None, reduce_only=None, postOnly=None,
+    async def buy(self, instrument, ordertype, quantity, price=None, stopPx=None, reduceOnly=None, postOnly=None,
             label=None):
         options = {
             "instrument": instrument,
@@ -133,19 +133,19 @@ class RestClient(object):
             options["price"] = price
         if stopPx:
             options["stopPx"] = stopPx
-        if reduce_only:
-            options["reduce_only"] = reduce_only
+        if reduceOnly is True:
+            options["reduceOnly"] = 'true'
         if label:
             options["label"] = label
-        if postOnly:
-            options["postOnly"] = postOnly
+        if postOnly is True:
+            options["postOnly"] = 'true'
 
         logger.warning("Buy() order options: ", options)
 
         return await self.request("/api/v1/private/buy", options)
 
 
-    async def sell(self, instrument, ordertype, quantity, price=None, stopPx=None, reduce_only=None, postOnly=None,
+    async def sell(self, instrument, ordertype, quantity, price=None, stopPx=None, reduceOnly=None, postOnly=None,
              label=None):
         options = {
             "instrument": instrument,
@@ -157,12 +157,12 @@ class RestClient(object):
             options["price"] = price
         if stopPx:
             options["stopPx"] = stopPx
-        if reduce_only:
-            options["reduce_only"] = reduce_only
+        if reduceOnly is True:
+            options["reduceOnly"] = 'true'
         if label:
             options["label"] = label
-        if postOnly:
-            options["postOnly"] = postOnly
+        if postOnly is True:
+            options["postOnly"] = 'true'
 
         logger.warning("Sell() order options: ", options)
 

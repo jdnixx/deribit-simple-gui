@@ -3,6 +3,10 @@
 import time, hashlib, requests, base64, sys
 from collections import OrderedDict
 
+from utils import log
+logger = log.setup_custom_logger(__name__)
+
+
 class RestClient(object):
     def __init__(self, key=None, secret=None, url=None):
         self.key = key

@@ -1,33 +1,25 @@
 """
-STARTER - Main Container
+STARTER_LIVE - Main Container
+
+WARNING!!!!!!!!!!!
+FOR LIVE USAGE!!
+(with deribit_keys_live.txt)
 
 Main module that bootstraps the program.
-
-*currently used for testing, mostly*
-I'm experimenting with GUI changes, so this separates the bot startup from the Tkinter window
 """
 import asyncio
+from utils import log
+logger = log.setup_custom_logger(__name__)
+
+logger.info("\n\n Begin")
+logger.info("STARTING PROGRAM")
 
 import ordermanager_interface
 from tkinter_gui import WindowMarketbuy, tk
 
-import random
-
-"""
-INITIAL DECLARATIONS
-"""
 INSTRUMENT = 'ETH-PERPETUAL'
 # LOOP_INTERVAL = 0.5
 
-
-# OrderManager instance
-# om = OrderManager(INSTRUMENT)
-
-# assign same om object across all Monitor and Window instances
-# Monitor.om = om
-# WindowMarketbuy.om = om
-
-# pm = Monitor()
 client = ordermanager_interface.NewClient('../deribit_keys_live.txt')
 om = ordermanager_interface.OrderManager(INSTRUMENT, client)
 guiroot = WindowMarketbuy(om)
@@ -78,9 +70,22 @@ addbtn_entry.grid(row=0, column=1)
 
 
 async def main():
-    tk_run = asyncio.create_task(guiroot.run())
     # om_run = asyncio.create_task(guiroot.om_run())
-    await asyncio.gather(tk_run)
+
+    # tk_run = asyncio.create_task(guiroot.run())
+    # await asyncio.gather(tk_run)
+
+    # try/except keeps program exit from printing an ugly stacktrace.
+    # Also adds a newline to the log on exit
+    try:
+        await guiroot.run()
+    except (KeyboardInterrupt, SystemExit, Exception) as e:
+        logger.error(e)
+        logger.warning("Program exit with above error.")
+        logger.warning("\n")
+    finally:
+        logger.warning("Program exit.")
+        logger.warning("\n")
 
     # while True:
     #     await pm_run
@@ -88,4 +93,5 @@ async def main():
 
 
 if __name__ == '__main__':
+    logger.info("asyncio.run(main()) STARTED!")
     asyncio.run(main())

@@ -2,9 +2,6 @@
 Order Manager Interface - deribit API client wrapper, with my own custom-built features/functions
 """
 
-import time
-import asyncio
-
 from extras.deribit_api_async import RestClient
 from extras.orders_async import *
 
@@ -100,61 +97,35 @@ class OrderManager:
         return book[BOOK_SIDE_ORDERTYPE[side]][0]['price']
 
     ### PLACE-ORDER METHODS ###
-    async def market_order(self, side, amt):
-        # return MarketOrder(side, amt)
-        return await MarketOrder().make_market_order(side, amt)
-        # mktord = MarketOrder(side, amt)
-        # print(mktord)
-        # print(mktord.task.result())
-        # return mktord
-    # def market_buy(self, amt):
-    #     return lambda: self.client.buy(self.instrument, "market", self.qty(amt))
+    async def market_order(self, side, amt, reduceOnly=None, label=None):
+        return await MarketOrder().make_market_order(side, amt, reduceOnly=reduceOnly, label=label)
 
-    async def limit(self, side, amt, price, postOnly):
-        return await LimitOrder().make_limit_order(side, amt, price, postOnly)
+    async def limit(self, side, amt, price, postOnly=None, reduceOnly=None, label=None):
+        return await LimitOrder().make_limit_order(side, amt, price, postOnly=postOnly, reduceOnly=reduceOnly, label=label)
 
-    # def limit_sell(self, amt, price, postOnly=None):
-    #     return lambda: self.client.sell(self.instrument, "limit", self.qty(amt), price, postOnly)
-
-    def stop_market_buy(self, amt, stopPx, reduce_only=None):
-        return self.client.buy(self.instrument, "stop_market", self.qty(amt), stopPx, reduce_only)
-
-    def stop_market_sell(self, amt, stopPx, reduce_only=None):
-        return self.client.sell(self.instrument, "stop_market", self.qty(amt), stopPx, reduce_only)
-
-
-    ### SPECIAL ORDERS ###
-    async def limit_chase(self, side, amt):
-        # startprice = self.get_spread_price(side)
+    async def limit_chase(self, side, amt, reduceOnly=None, label=None):
         limchase_instance = LimitChaser()
+        await limchase_instance.make_limitchase_initial_order(side, amt, reduceOnly=reduceOnly, label=label)
 
         # start loop
-        await limchase_instance.make_limitchase_initial_order(side, amt)
-
-        if side is 'buy':
-            price = 100000
-        elif side is 'sell':
-            price = 1
-
         while not await limchase_instance.is_filled():
             logger.info("limit_chase() is running...")
-            # await limchase_instance.check_spread_and_adjust()
-            await limchase_instance.spam_edit_order(price)
-
+            await limchase_instance.spam_edit_order()
             logger.info("LimitChaser loop sleeping for 50ms...")
             await asyncio.sleep(0.05)
         logger.info("LimitChase done, final order: ")
         logger.info(limchase_instance.order)
         return limchase_instance.order  # order must be filled
 
+    # def stop_market_buy(self, amt, stopPx, reduce_only=None):
+    #     return self.client.buy(self.instrument, "stop_market", self.qty(amt), stopPx, reduce_only)
+    #
+    # def stop_market_sell(self, amt, stopPx, reduce_only=None):
+    #     return self.client.sell(self.instrument, "stop_market", self.qty(amt), stopPx, reduce_only)
 
     ### STOPS (LOOP) METHODS ###
     async def create_monitor(self):
         pass
-
-
-
-
 
     ### MAIN ORDERMANAGER METHODS ###
     # async def run(self):
@@ -177,7 +148,6 @@ class OrderManager:
         await asyncio.sleep(LOOP_INTERVAL)
 
 
-
 class NewClient(RestClient):
     """
     Deribit Client setup
@@ -196,8 +166,8 @@ class NewClient(RestClient):
         with open(path_to_keyfile, "r") as f:
             deribit_key = f.readline().strip()
             deribit_secret = f.readline().strip()
-
             optional_test = f.readline().strip()
+
             if optional_test == "test":
                 deribit_testnet = "https://test.deribit.com"
             else:

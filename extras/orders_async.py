@@ -8,6 +8,10 @@ BOOK_SIDE_ORDERTYPE = {
     'sell': 'asks'
 }
 
+PRICE_MAX_BY_INSTRUMENT = {
+    'BTC-PERPETUAL': 100000,
+    'ETH-PERPETUAL': 1000
+}
 # class aobject(object):
 #     """Inheriting this class allows you to define an async __init__.
 #
@@ -42,6 +46,7 @@ class Order:
     async def _make_order(self, side, *args, **kwargs):
         """ Makes an order (buy or sell) and returns a response object from the API """
         logger.info(f"Sending request for client {side} with args={args} and kwargs={kwargs}...")
+        # command_buy_or_sell =
         if side == 'buy':
             return await self.om.client.buy(self.om.instrument, *args, **kwargs)
         elif side == 'sell':
@@ -63,10 +68,8 @@ class MarketOrder(Order):
     def __init__(self):
         super().__init__()
 
-        # blah blah make a market order
-
-    async def make_market_order(self, side, amt):
-        resp = await self._make_order(side, 'market', amt)   # sets self.order
+    async def make_market_order(self, side, amt, reduceOnly=None, label=None):
+        resp = await self._make_order(side, 'market', amt, reduceOnly=reduceOnly, label=label)   # sets self.order
         self.order = resp['order']
         logger.info("Market Order made, order:")
         logger.info(self.order)
@@ -75,15 +78,9 @@ class MarketOrder(Order):
 class LimitOrder(Order):
     def __init__(self):
         super().__init__()
-    #
-    #     # blah blah make a limit order
-    #     resp = await self._make_order(side, 'limit', amt, price, postOnly)
-    #     self.order = resp['order']
-    #
-    #     print("LimitOrder obj self.order: ", self.order)
 
-    async def make_limit_order(self, side, amt, price, postOnly):
-        resp = await self._make_order(side, 'limit', amt, price, postOnly)
+    async def make_limit_order(self, side, amt, price, postOnly=None, reduceOnly=None, label=None):
+        resp = await self._make_order(side, 'limit', amt, price, postOnly=postOnly, reduceOnly=reduceOnly, label=label)
         self.order = resp['order']
         logger.info("Limit Order made, order: ")
         logger.info(self.order)
@@ -91,24 +88,19 @@ class LimitOrder(Order):
 
 class LimitChaser(LimitOrder):
     def __init__(self):
-        self.order_current_price = None
+        self.price = None
         super().__init__()
 
-    # async def make_limitchase_initial_order(self, side, amt, postOnly=True):
-    #     self.side = side
-    #     self.amt = amt
-    #     initialprice = await self.om.get_spread_price(self.side)
-    #     await self.make_limit_order(self.side, self.amt, initialprice, postOnly)
-    #     # self.order = is now accessible
-    #     self.order_id = self.order['orderId']
-    #
-    #     print("LimitChaser obj self.order: ", self.order)
-
-    async def make_limitchase_initial_order(self, side, amt):
+    async def make_limitchase_initial_order(self, side, amt, reduceOnly=None, label=None):
         self.side = side
         self.amt = amt
-        initialprice = await self.om.get_spread_price(self.side)
-        await self.make_limit_order(self.side, self.amt, initialprice, postOnly=True)
+
+        if side is 'buy':
+            self.price = PRICE_MAX_BY_INSTRUMENT[self.om.instrument]
+        elif side is 'sell':
+            self.price = 1
+        # initialprice = await self.om.get_spread_price(self.side)
+        await self.make_limit_order(self.side, self.amt, self.price, postOnly=True, reduceOnly=reduceOnly, label=label)
 
         # self.order = is now accessible
         self.order_id = self.order['orderId']
@@ -122,9 +114,6 @@ class LimitChaser(LimitOrder):
         state = self.order['state']
         logger.info("Chceking if order is filled; Order 'state' is: ")
         logger.info(state)
-        logger.info("So 'filled' is (true or false):")
-        isfilled = state == 'filled'
-        logger.info(isfilled)
         return state == 'filled'
 
     # async def check_spread_and_adjust(self):
@@ -135,5 +124,5 @@ class LimitChaser(LimitOrder):
     #             or ((current_spread_price < self.order_current_price) and (self.side is 'sell')):
     #         await self.om.client.edit(self.order_id, quantity, current_spread_price)
 
-    async def spam_edit_order(self, price):
-        await self.om.client.edit(self.order_id, self.amt, price)
+    async def spam_edit_order(self):
+        await self.om.client.edit(self.order_id, self.amt, self.price)
