@@ -23,6 +23,9 @@ INSTRUMENT = 'ETH-PERPETUAL'
 client = ordermanager_interface.NewClient('../deribit_keys_reserve.txt')
 om = ordermanager_interface.OrderManager(INSTRUMENT, client)
 guiroot = WindowMarketbuy(om)
+# omBTC = ordermanager_interface.OrderManager('BTC-PERPETUAL', client)
+# guirootBTC = WindowMarketbuy(omBTC)
+
 
 
 """
@@ -79,6 +82,8 @@ async def main():
     # Also adds a newline to the log on exit
     try:
         await guiroot.run()
+        if omBTC and guirootBTC:
+            await guirootBTC.run()
     except (KeyboardInterrupt, SystemExit, Exception) as e:
         logger.error(e)
         logger.warning("Program exit with above error.")
