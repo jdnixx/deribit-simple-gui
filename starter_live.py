@@ -17,14 +17,15 @@ logger.info("STARTING PROGRAM")
 import ordermanager_interface
 from tkinter_gui import WindowMarketbuy, tk
 
-INSTRUMENT = 'ETH-PERPETUAL'
+INSTRUMENT_BTC = 'BTC-PERPETUAL'
+INSTRUMENT_ETH = 'ETH-PERPETUAL'
 # LOOP_INTERVAL = 0.5
 
-client = ordermanager_interface.NewClient('../deribit_keys_reserve.txt')
-om = ordermanager_interface.OrderManager(INSTRUMENT, client)
-guiroot = WindowMarketbuy(om)
-# omBTC = ordermanager_interface.OrderManager('BTC-PERPETUAL', client)
+client = ordermanager_interface.NewClient('../deribit_keys_live.txt')
+# omBTC = ordermanager_interface.OrderManager(INSTRUMENT_BTC, client)
 # guirootBTC = WindowMarketbuy(omBTC)
+omETH = ordermanager_interface.OrderManager(INSTRUMENT_ETH, client)
+guirootETH = WindowMarketbuy(omETH)
 
 
 
@@ -34,12 +35,12 @@ TKINTER SETUP
 
 ### "ADD BUTTON" BUTTON ###
 # 'amount' entry box
-addbtn_entry = tk.Entry(guiroot.frame, exportselection=0)
+addbtn_entry = tk.Entry(guirootETH.frame, exportselection=0)
 
 # button creation & placement
 def dynamically_add_buttons():
-    guiroot.add_button(guiroot.new_limitchase_button('buy', addbtn_entry.get()))
-    guiroot.place_buttons()
+    guirootETH.add_button(guirootETH.new_limitchase_button('buy', addbtn_entry.get()))
+    guirootETH.place_buttons()
 # def dynamically_add_buttons():
 #     guiroot.add_button(random.choice([
 #         guiroot.new_buy_market_button(random.choice([100, 200, 300, 400, 500])),
@@ -48,18 +49,18 @@ def dynamically_add_buttons():
 #     guiroot.place_buttons()
 
 
-dynamicallyaddbuttonbutton = tk.Button(guiroot.frame, text="Add A Button :)",
+dynamicallyaddbuttonbutton = tk.Button(guirootETH.frame, text="Add A Button :)",
                                        command=lambda : dynamically_add_buttons())
 
 
 
 
 
-mktbuy_1 = guiroot.new_market_button('buy', 10)
-limitchase_1 = guiroot.new_limitchase_button('buy', 500)
-limitch_sell_1 = guiroot.new_limitchase_button('sell', 510)
-guiroot.add_button(dynamicallyaddbuttonbutton, mktbuy_1, limitchase_1, limitch_sell_1)
-guiroot.place_buttons()
+mktbuy_1 = guirootETH.new_market_button('buy', 10)
+limitchase_1 = guirootETH.new_limitchase_button('buy', 500)
+limitch_sell_1 = guirootETH.new_limitchase_button('sell', 510)
+guirootETH.add_button(dynamicallyaddbuttonbutton, mktbuy_1, limitchase_1, limitch_sell_1)
+guirootETH.place_buttons()
 
 
 addbtn_entry.grid(row=0, column=1)
@@ -73,17 +74,13 @@ addbtn_entry.grid(row=0, column=1)
 
 
 async def main():
-    # om_run = asyncio.create_task(guiroot.om_run())
-
-    # tk_run = asyncio.create_task(guiroot.run())
-    # await asyncio.gather(tk_run)
-
     # try/except keeps program exit from printing an ugly stacktrace.
     # Also adds a newline to the log on exit
     try:
-        await guiroot.run()
         if omBTC and guirootBTC:
             await guirootBTC.run()
+        if omETH and guirootETH:
+            await guirootETH.run()
     except (KeyboardInterrupt, SystemExit, Exception) as e:
         logger.error(e)
         logger.warning("Program exit with above error.")
