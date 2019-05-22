@@ -20,7 +20,7 @@ from tkinter_gui import WindowMarketbuy, tk
 INSTRUMENT = 'ETH-PERPETUAL'
 # LOOP_INTERVAL = 0.5
 
-client = ordermanager_interface.NewClient('../deribit_keys_live.txt')
+client = ordermanager_interface.NewClient('../deribit_keys_reserve.txt')
 om = ordermanager_interface.OrderManager(INSTRUMENT, client)
 guiroot = WindowMarketbuy(om)
 

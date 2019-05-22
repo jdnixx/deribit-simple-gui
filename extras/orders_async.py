@@ -46,22 +46,10 @@ class Order:
     async def _make_order(self, side, *args, **kwargs):
         """ Makes an order (buy or sell) and returns a response object from the API """
         logger.info(f"Sending request for client {side} with args={args} and kwargs={kwargs}...")
-        # command_buy_or_sell =
-        if side == 'buy':
-            return await self.om.client.buy(self.om.instrument, *args, **kwargs)
-        elif side == 'sell':
-            return await self.om.client.sell(self.om.instrument, *args, **kwargs)
-        else:
-            raise ValueError("'side' parameter must be either 'buy' or 'sell'")
-
-    # async def _make_order_OM(self, side, *args, **kwargs):
-    #     """ Makes an order (buy or sell) and returns a response object from the API """
-    #     if side == 'buy':
-    #         return await self.client.buy(self.instrument, *args, **kwargs)
-    #     elif side == 'sell':
-    #         return await self.client.sell(self.instrument, *args, **kwargs)
-    #     else:
-    #         raise ValueError("'side' parameter must be either 'buy' or 'sell'")
+        command_buy_or_sell = getattr(self.om.client, side)
+        return await command_buy_or_sell(self.om.instrument, *args, **kwargs)
+        # else:
+        #     raise ValueError("'side' parameter must be either 'buy' or 'sell'")
 
 class MarketOrder(Order):
     # def __init__(self, side, amt):

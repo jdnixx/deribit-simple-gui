@@ -99,7 +99,7 @@ class WindowMarketbuy(tk.Tk):
 
         self.update()
         # print("GUI loop has run: @ time {0}".format(time.perf_counter()))
-        await asyncio.sleep(0)
+        await asyncio.sleep(LOOP_INTERVAL)
 
 
 class BuySellButton(tk.Button):
