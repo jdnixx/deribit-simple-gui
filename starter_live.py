@@ -22,6 +22,8 @@ INSTRUMENT_ETH = 'ETH-PERPETUAL'
 # LOOP_INTERVAL = 0.5
 
 client = ordermanager_interface.NewClient('../deribit_keys_live.txt')
+omBTC = omETH = guirootBTC = guirootETH = None
+
 # omBTC = ordermanager_interface.OrderManager(INSTRUMENT_BTC, client)
 # guirootBTC = WindowMarketbuy(omBTC)
 omETH = ordermanager_interface.OrderManager(INSTRUMENT_ETH, client)
@@ -38,8 +40,11 @@ TKINTER SETUP
 addbtn_entry = tk.Entry(guirootETH.frame, exportselection=0)
 
 # button creation & placement
-def dynamically_add_buttons():
-    guirootETH.add_button(guirootETH.new_limitchase_button('buy', addbtn_entry.get()))
+def dynamically_add_buttons_market(side):
+    guirootETH.add_button(guirootETH.new_market_button(side, addbtn_entry.get()))
+    guirootETH.place_buttons()
+def dynamically_add_buttons_limitchase(side):
+    guirootETH.add_button(guirootETH.new_limitchase_button(side, addbtn_entry.get()))
     guirootETH.place_buttons()
 # def dynamically_add_buttons():
 #     guiroot.add_button(random.choice([
@@ -49,17 +54,25 @@ def dynamically_add_buttons():
 #     guiroot.place_buttons()
 
 
-dynamicallyaddbuttonbutton = tk.Button(guirootETH.frame, text="Add A Button :)",
-                                       command=lambda : dynamically_add_buttons())
+dynamicallyaddbutton_limitchase_buy = tk.Button(guirootETH.frame, text="Add :) LimitChase BUY",
+                                           command=lambda : dynamically_add_buttons_limitchase('buy'))
+dynamicallyaddbutton_limitchase_sell = tk.Button(guirootETH.frame, text="Add :) LimitChase SELL",
+                                           command=lambda : dynamically_add_buttons_limitchase('sell'))
+dynamicallyaddbutton_market_buy = tk.Button(guirootETH.frame, text="Add :) Market BUY",
+                                           command=lambda : dynamically_add_buttons_market('buy'))
+dynamicallyaddbutton_market_sell = tk.Button(guirootETH.frame, text="Add :) Market SELL",
+                                           command=lambda : dynamically_add_buttons_market('sell'))
 
 
 
 
 
 mktbuy_1 = guirootETH.new_market_button('buy', 10)
-limitchase_1 = guirootETH.new_limitchase_button('buy', 500)
-limitch_sell_1 = guirootETH.new_limitchase_button('sell', 510)
-guirootETH.add_button(dynamicallyaddbuttonbutton, mktbuy_1, limitchase_1, limitch_sell_1)
+limitchase_1 = guirootETH.new_limitchase_button('buy', 50)
+limitch_sell_1 = guirootETH.new_limitchase_button('sell', 50)
+guirootETH.add_button(dynamicallyaddbutton_limitchase_buy, dynamicallyaddbutton_limitchase_sell,
+                      dynamicallyaddbutton_market_buy, dynamicallyaddbutton_market_sell,
+                      mktbuy_1, limitchase_1, limitch_sell_1)
 guirootETH.place_buttons()
 
 

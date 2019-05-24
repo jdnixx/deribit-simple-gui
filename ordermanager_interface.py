@@ -6,8 +6,10 @@ from extras.deribit_api_async import RestClient
 from extras.orders_async import *
 
 from utils import log
-logger = log.setup_custom_logger(__name__)
 
+
+# Constants
+DEFAULT_INSTRUMENT = 'BTC-PERPETUAL'
 # interval (in seconds) for run_loop()
 LOOP_INTERVAL = 0.5
 # Position limits (bot won't buy/sell over this amount of contracts)
@@ -20,31 +22,33 @@ TICK_SIZES = {
 }
 
 
+# Logging
+logger = log.setup_custom_logger(__name__)
+
+
 class OrderManager:
     """
     Interface containing all the main "bot"-type (user-facing) methods
 
     :param instrument: the swap to be traded on ('BTC-PERPETUAL', 'ETH-PERPETUAL')
     """
-    def __init__(self, instrument, client=None):
+    def __init__(self, client=None, instrument=None, path_to_keyfile=None):
+        self.client = client
         self.instrument = instrument
-        self.ticksize = TICK_SIZES[instrument]  # not used yet
 
-        if client:
-            self.client = client
-        else:
-            self.client = NewClient()
+        if not client:
+            if not path_to_keyfile:
+                self.client = NewClient()   # by default uses 'deribit_keys.txt'
+            else:
+                self.client = NewClient(path_to_keyfile)
+        if not instrument:
+            self.instrument = DEFAULT_INSTRUMENT
         self.client.index()
         self.client.account()
 
-        # Order.instrument = self.instrument
-        # Order.client = self.client
 
-        # self.pm = Monitor()           nope, this is for spawning individually
+        self.ticksize = TICK_SIZES[self.instrument]  # not used yet
 
-        # initialize position var
-        # self.position = self.get_position_details()     # this will also run on each async loop in starter.py()
-        # self.ctr = 0
 
         logger.info("OM object created!")
 

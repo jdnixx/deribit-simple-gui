@@ -52,7 +52,6 @@ class Order:
         #     raise ValueError("'side' parameter must be either 'buy' or 'sell'")
 
 class MarketOrder(Order):
-    # def __init__(self, side, amt):
     def __init__(self):
         super().__init__()
 
@@ -87,7 +86,6 @@ class LimitChaser(LimitOrder):
             self.price = PRICE_MAX_BY_INSTRUMENT[self.om.instrument]
         elif side is 'sell':
             self.price = 1
-        # initialprice = await self.om.get_spread_price(self.side)
         await self.make_limit_order(self.side, self.amt, self.price, postOnly=True, reduceOnly=reduceOnly, label=label)
 
         # self.order = is now accessible
@@ -104,6 +102,9 @@ class LimitChaser(LimitOrder):
         logger.info(state)
         return state == 'filled'
 
+    async def spam_edit_order(self):
+        await self.om.client.edit(self.order_id, self.amt, self.price)
+
     # async def check_spread_and_adjust(self):
     #     self.order_current_price = self.order['price']
     #     current_spread_price = await self.om.get_spread_price(self.side)
@@ -111,6 +112,3 @@ class LimitChaser(LimitOrder):
     #     if ((current_spread_price > self.order_current_price) and (self.side is 'buy'))\
     #             or ((current_spread_price < self.order_current_price) and (self.side is 'sell')):
     #         await self.om.client.edit(self.order_id, quantity, current_spread_price)
-
-    async def spam_edit_order(self):
-        await self.om.client.edit(self.order_id, self.amt, self.price)
