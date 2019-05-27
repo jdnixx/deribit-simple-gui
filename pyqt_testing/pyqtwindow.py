@@ -27,17 +27,43 @@ class Window(qwid.QMainWindow):
         self.setGeometry(50, 50, 500, 300)
         self.setWindowTitle('PyQt boiiiiiiiii')
 
-        self.create_button()
+
+        # Layouts
+        mktlayout = qwid.QVBoxLayout(self)
+
+
+
+        # Buttons
+        self.butts = []
+
+        for p in range(3):
+            b = qwid.QPushButton(f"Butt for Layout{p}", self)
+            b.clicked.connect(lambda : print(p))
+
+            mktlayout.addWidget(b)
+
+        self.setLayout(mktlayout)
+        # self.create_button(0)
+        # self.create_button(1)
+        # self.create_button(2)
+
 
 
 
 
         self.show()
 
-    def create_button(self):
-        self.button = qwid.QPushButton("First Butt on", self)
+    def create_button(self, p):
+        butt = qwid.QPushButton(f"Butt on{p}", self)
+        butt.move(p*100, p*100)
 
-        self.button.clicked.connect(self.go)
+        def printp():
+            for i in range(p+1):
+                print(p)
+
+        butt.clicked.connect(lambda : printp())
+
+        self.butts.append(butt)
 
 
         # button.show()
