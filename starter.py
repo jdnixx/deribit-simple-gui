@@ -23,9 +23,9 @@ INSTRUMENT_ETH = 'ETH-PERPETUAL'
 client = ordermanager_interface.NewClient('../deribit_keys.txt')
 omBTC = omETH = guirootBTC = guirootETH = None
 
-omBTC = ordermanager_interface.OrderManager(INSTRUMENT_BTC, client)
+omBTC = ordermanager_interface.OrderManager(client, INSTRUMENT_ETH)
 guirootBTC = WindowMarketbuy(omBTC)
-# omETH = ordermanager_interface.OrderManager(INSTRUMENT, client)
+# omETH = ordermanager_interface.OrderManager(client, INSTRUMENT_ETH)
 # guirootETH = WindowMarketbuy(omETH)
 
 
