@@ -7,6 +7,8 @@ from extras.orders_async import *
 
 from utils import log
 
+# Logging
+logger = log.setup_custom_logger(__name__)
 
 # Constants
 DEFAULT_INSTRUMENT = 'BTC-PERPETUAL'
@@ -20,10 +22,6 @@ TICK_SIZES = {
     'BTC-PERPETUAL': 0.25,
     'ETH-PERPETUAL': 0.01
 }
-
-
-# Logging
-logger = log.setup_custom_logger(__name__)
 
 
 class OrderManager:

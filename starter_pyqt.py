@@ -42,42 +42,40 @@ class Starter:
         self.gui = uihandler.AsyncQt(order_manager_instance)
 
         logger.info("asyncio.run() STARTING!")
-        asyncio.run(self.go())
+        # try/except keeps program exit from printing an ugly stacktrace.
+        # Also adds a newline to the log on exit
+        try:
+            asyncio.run(self.go())
+        except (KeyboardInterrupt, SystemExit, Exception) as e:
+            logger.error("Error encountered:")
+            logger.error(e)
+        finally:
+            logger.warning("Program exit.")
+            logger.warning("\n")
 
     async def go(self):
         logger.info("Starter.go() INITIATED!")
         asyncio.create_task(printblah())
         await self.gui.run_asyncqt()
 
-async def main():
-    # try/except keeps program exit from printing an ugly stacktrace.
-    # Also adds a newline to the log on exit
-    try:
-        print('main started somehow')
-        asyncio.create_task(printblah())
-        # await gui.run_asyncqt()
-        # asyncio.create_task(gui.run_asyncqt())
-        # while True:
-        #     print(asyncio.get_event_loop())
-            # tsk = asyncio.create_task(asyncio.sleep(5))
-            # task = asyncio.create_task(printblah())
-            # asyncio.gather(tsk, task)
-
-        # app = uihandler.AsyncQt()
-        # await app.run_asyncqt()
-    except (KeyboardInterrupt, SystemExit, Exception) as e:
-        logger.error(e)
-        logger.warning("Program exit with above error.")
-        logger.warning("\n")
-    finally:
-        logger.warning("Program exit.")
-        logger.warning("\n")
-
 async def printblah():
     while True:
         print("printblah")
         await asyncio.sleep(2)
 
+
+async def main():
+    # try/except keeps program exit from printing an ugly stacktrace.
+    # Also adds a newline to the log on exit
+    try:
+        # asyncio.run(self.go())
+        pass
+    except (KeyboardInterrupt, SystemExit, Exception) as e:
+        logger.error("Error encountered:")
+        logger.error(e)
+    finally:
+        logger.warning("Program exit.")
+        logger.warning("\n")
 
 if __name__ == '__main__':
     logger.info("asyncio.run(main()) STARTED!")
