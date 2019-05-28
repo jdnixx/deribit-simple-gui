@@ -71,12 +71,20 @@ class Ui_Form(object):
         self.verticalLayoutWidget_2 = QtWidgets.QWidget(Form)
         self.verticalLayoutWidget_2.setGeometry(QtCore.QRect(20, 120, 160, 241))
         self.verticalLayoutWidget_2.setObjectName("verticalLayoutWidget_2")
-        self.layout_resultbuttons = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_2)
-        self.layout_resultbuttons.setContentsMargins(0, 0, 0, 0)
-        self.layout_resultbuttons.setObjectName("layout_resultbuttons")
+        self.layout_spawnedbuttons = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_2)
+        self.layout_spawnedbuttons.setContentsMargins(0, 0, 0, 0)
+        self.layout_spawnedbuttons.setObjectName("layout_spawnedbuttons")
 
         self.retranslateUi(Form)
+        self.btn_addMktBuy.clicked.connect(Form.add_mktbuy_btn)
+        self.lineEdit.textChanged['QString'].connect(Form.lineEdit_amt_edited)
         QtCore.QMetaObject.connectSlotsByName(Form)
+        Form.setTabOrder(self.lineEdit, self.spinBox)
+        Form.setTabOrder(self.spinBox, self.btn_addMktBuy)
+        Form.setTabOrder(self.btn_addMktBuy, self.btn_addMktSell)
+        Form.setTabOrder(self.btn_addMktSell, self.btn_addLCBuy)
+        Form.setTabOrder(self.btn_addLCBuy, self.btn_addLCSell)
+        Form.setTabOrder(self.btn_addLCSell, self.pushButton_3)
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate

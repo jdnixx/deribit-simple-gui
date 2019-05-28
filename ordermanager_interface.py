@@ -33,6 +33,7 @@ class OrderManager:
     :param instrument: the swap to be traded on ('BTC-PERPETUAL', 'ETH-PERPETUAL')
     """
     def __init__(self, client=None, instrument=None, path_to_keyfile=None):
+        Order.om = self
         self.client = client
         self.instrument = instrument
 

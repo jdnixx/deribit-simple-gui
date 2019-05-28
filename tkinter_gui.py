@@ -37,9 +37,8 @@ class WindowMarketbuy(tk.Tk):
             self.om = ordermanager
         else:
             self.om = OrderManager(DEFAULT_INSTRUMENT)
-        # self.om = __class__.om
         BuySellButton.om = self.om
-        Order.om = self.om
+        # Order.om = self.om
 
         # tk.Tk (root) init
         super().__init__()

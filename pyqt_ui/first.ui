@@ -165,9 +165,56 @@
      <height>241</height>
     </rect>
    </property>
-   <layout class="QVBoxLayout" name="layout_resultbuttons"/>
+   <layout class="QVBoxLayout" name="layout_spawnedbuttons"/>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>lineEdit</tabstop>
+  <tabstop>spinBox</tabstop>
+  <tabstop>btn_addMktBuy</tabstop>
+  <tabstop>btn_addMktSell</tabstop>
+  <tabstop>btn_addLCBuy</tabstop>
+  <tabstop>btn_addLCSell</tabstop>
+  <tabstop>pushButton_3</tabstop>
+ </tabstops>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>btn_addMktBuy</sender>
+   <signal>clicked()</signal>
+   <receiver>Form</receiver>
+   <slot>add_mktbuy_btn()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>45</x>
+     <y>53</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>145</x>
+     <y>191</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>Form</receiver>
+   <slot>lineEdit_amt_edited(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>24</x>
+     <y>34</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>340</x>
+     <y>208</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <signal>mktbuy_signal()</signal>
+  <slot>add_mktbuy_btn()</slot>
+  <slot>lineEdit_amt_edited(QString)</slot>
+ </slots>
 </ui>
