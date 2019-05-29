@@ -190,8 +190,8 @@
      <y>53</y>
     </hint>
     <hint type="destinationlabel">
-     <x>145</x>
-     <y>191</y>
+     <x>87</x>
+     <y>182</y>
     </hint>
    </hints>
   </connection>
@@ -211,10 +211,61 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>btn_addMktSell</sender>
+   <signal>clicked()</signal>
+   <receiver>Form</receiver>
+   <slot>add_mktsell_btn()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>66</x>
+     <y>87</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>88</x>
+     <y>159</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_addLCBuy</sender>
+   <signal>clicked()</signal>
+   <receiver>Form</receiver>
+   <slot>add_limitchasebuy_btn()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>177</x>
+     <y>58</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>256</x>
+     <y>156</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_addLCSell</sender>
+   <signal>clicked()</signal>
+   <receiver>Form</receiver>
+   <slot>add_limitchasesell_btn()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>192</x>
+     <y>90</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>259</x>
+     <y>181</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <signal>mktbuy_signal()</signal>
   <slot>add_mktbuy_btn()</slot>
   <slot>lineEdit_amt_edited(QString)</slot>
+  <slot>add_mktsell_btn()</slot>
+  <slot>add_limitchasebuy_btn()</slot>
+  <slot>add_limitchasesell_btn()</slot>
  </slots>
 </ui>
