@@ -1,4 +1,4 @@
-from starter_pyqt import Starter
+from pyqt_ui.starter_pyqt import Starter
 
 
 

@@ -1,11 +1,7 @@
 """
 STARTER_PYQT - Main Container Interface
 
-WARNING!!!!!!!!!!!
-Works on live accounts!
-Only use a keyfile with testnet credentials if you aren't ready for live trading yet.
-
-(This program may be unfinished or buggy; use at your own risk)
+Mainly for starting the pyqt GUI w/ asyncio
 
 """
 import asyncio
@@ -14,7 +10,6 @@ from ordermanager_interface import OrderManager, NewClient
 from pyqt_ui import uihandler
 from utils import log
 
-### LOGGING ###
 logger = log.setup_custom_logger(__name__)
 logger.info("\n\n Begin")
 logger.info("STARTING PROGRAM")
@@ -24,9 +19,6 @@ INSTRUMENTS = {
     'btc': 'BTC-PERPETUAL',
     'eth': 'ETH-PERPETUAL'
 }
-# INSTRUMENT_BTC = 'BTC-PERPETUAL'
-# INSTRUMENT_ETH = 'ETH-PERPETUAL'
-# LOOP_INTERVAL = 0.5
 
 
 class Starter:
@@ -41,10 +33,10 @@ class Starter:
         order_manager_instance = OrderManager(client, INSTRUMENTS[market])
         self.gui = uihandler.AsyncQt(order_manager_instance)
 
-        logger.info("asyncio.run() STARTING!")
         # try/except keeps program exit from printing an ugly stacktrace.
         # Also adds a newline to the log on exit
         try:
+            logger.info("asyncio.run() STARTING!")
             asyncio.run(self.go())
         except (KeyboardInterrupt, SystemExit, Exception) as e:
             logger.error("Error encountered:")
@@ -62,22 +54,3 @@ async def printblah():
     while True:
         print("printblah")
         await asyncio.sleep(2)
-
-
-async def main():
-    # try/except keeps program exit from printing an ugly stacktrace.
-    # Also adds a newline to the log on exit
-    try:
-        # asyncio.run(self.go())
-        pass
-    except (KeyboardInterrupt, SystemExit, Exception) as e:
-        logger.error("Error encountered:")
-        logger.error(e)
-    finally:
-        logger.warning("Program exit.")
-        logger.warning("\n")
-
-if __name__ == '__main__':
-    logger.info("asyncio.run(main()) STARTED!")
-    asyncio.run(main())
-    # asyncio.get_event_loop().run_forever()

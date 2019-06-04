@@ -5,7 +5,7 @@ FOR LIVE USAGE!!
 (with deribit_keys_live.txt)
 
 """
-from starter_pyqt import Starter
+from pyqt_ui.starter_pyqt import Starter
 
 
 

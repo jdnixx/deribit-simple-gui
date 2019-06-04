@@ -1,0 +1,409 @@
+# coding: utf-8
+
+"""
+    Deribit API
+
+    #Overview  Deribit provides three different interfaces to access the API:  * [JSON-RPC over Websocket](#json-rpc) * [JSON-RPC over HTTP](#json-rpc) * [FIX](#fix-api) (Financial Information eXchange)  With the API Console you can use and test the JSON-RPC API, both via HTTP and  via Websocket. To visit the API console, go to __Account > API tab >  API Console tab.__   ##Naming Deribit tradeable assets or instruments use the following system of naming:  |Kind|Examples|Template|Comments| |----|--------|--------|--------| |Future|<code>BTC-25MAR16</code>, <code>BTC-5AUG16</code>|<code>BTC-DMMMYY</code>|<code>BTC</code> is currency, <code>DMMMYY</code> is expiration date, <code>D</code> stands for day of month (1 or 2 digits), <code>MMM</code> - month (3 first letters in English), <code>YY</code> stands for year.| |Perpetual|<code>BTC-PERPETUAL</code>                        ||Perpetual contract for currency <code>BTC</code>.| |Option|<code>BTC-25MAR16-420-C</code>, <code>BTC-5AUG16-580-P</code>|<code>BTC-DMMMYY-STRIKE-K</code>|<code>STRIKE</code> is option strike price in USD. Template <code>K</code> is option kind: <code>C</code> for call options or <code>P</code> for put options.|   # JSON-RPC JSON-RPC is a light-weight remote procedure call (RPC) protocol. The  [JSON-RPC specification](https://www.jsonrpc.org/specification) defines the data structures that are used for the messages that are exchanged between client and server, as well as the rules around their processing. JSON-RPC uses JSON (RFC 4627) as data format.  JSON-RPC is transport agnostic: it does not specify which transport mechanism must be used. The Deribit API supports both Websocket (preferred) and HTTP (with limitations: subscriptions are not supported over HTTP).  ## Request messages > An example of a request message:  ```json {     \"jsonrpc\": \"2.0\",     \"id\": 8066,     \"method\": \"public/ticker\",     \"params\": {         \"instrument\": \"BTC-24AUG18-6500-P\"     } } ```  According to the JSON-RPC sepcification the requests must be JSON objects with the following fields.  |Name|Type|Description| |----|----|-----------| |jsonrpc|string|The version of the JSON-RPC spec: \"2.0\"| |id|integer or string|An identifier of the request. If it is included, then the response will contain the same identifier| |method|string|The method to be invoked| |params|object|The parameters values for the method. The field names must match with the expected parameter names. The parameters that are expected are described in the documentation for the methods, below.|  <aside class=\"warning\"> The JSON-RPC specification describes two features that are currently not supported by the API:  <ul> <li>Specification of parameter values by position</li> <li>Batch requests</li> </ul>  </aside>   ## Response messages > An example of a response message:  ```json {     \"jsonrpc\": \"2.0\",     \"id\": 5239,     \"testnet\": false,     \"result\": [         {             \"currency\": \"BTC\",             \"currencyLong\": \"Bitcoin\",             \"minConfirmation\": 2,             \"txFee\": 0.0006,             \"isActive\": true,             \"coinType\": \"BITCOIN\",             \"baseAddress\": null         }     ],     \"usIn\": 1535043730126248,     \"usOut\": 1535043730126250,     \"usDiff\": 2 } ```  The JSON-RPC API always responds with a JSON object with the following fields.   |Name|Type|Description| |----|----|-----------| |id|integer|This is the same id that was sent in the request.| |result|any|If successful, the result of the API call. The format for the result is described with each method.| |error|error object|Only present if there was an error invoking the method. The error object is described below.| |testnet|boolean|Indicates whether the API in use is actually the test API.  <code>false</code> for production server, <code>true</code> for test server.| |usIn|integer|The timestamp when the requests was received (microseconds since the Unix epoch)| |usOut|integer|The timestamp when the response was sent (microseconds since the Unix epoch)| |usDiff|integer|The number of microseconds that was spent handling the request|  <aside class=\"notice\"> The fields <code>testnet</code>, <code>usIn</code>, <code>usOut</code> and <code>usDiff</code> are not part of the JSON-RPC standard.  <p>In order not to clutter the examples they will generally be omitted from the example code.</p> </aside>  > An example of a response with an error:  ```json {     \"jsonrpc\": \"2.0\",     \"id\": 8163,     \"error\": {         \"code\": 11050,         \"message\": \"bad_request\"     },     \"testnet\": false,     \"usIn\": 1535037392434763,     \"usOut\": 1535037392448119,     \"usDiff\": 13356 } ``` In case of an error the response message will contain the error field, with as value an object with the following with the following fields:  |Name|Type|Description |----|----|-----------| |code|integer|A number that indicates the kind of error.| |message|string|A short description that indicates the kind of error.| |data|any|Additional data about the error. This field may be omitted.|  ## Notifications  > An example of a notification:  ```json {     \"jsonrpc\": \"2.0\",     \"method\": \"subscription\",     \"params\": {         \"channel\": \"deribit_price_index.btc_usd\",         \"data\": {             \"timestamp\": 1535098298227,             \"price\": 6521.17,             \"index_name\": \"btc_usd\"         }     } } ```  API users can subscribe to certain types of notifications. This means that they will receive JSON-RPC notification-messages from the server when certain events occur, such as changes to the index price or changes to the order book for a certain instrument.   The API methods [public/subscribe](#public-subscribe) and [private/subscribe](#private-subscribe) are used to set up a subscription. Since HTTP does not support the sending of messages from server to client, these methods are only availble when using the Websocket transport mechanism.  At the moment of subscription a \"channel\" must be specified. The channel determines the type of events that will be received.  See [Subscriptions](#subscriptions) for more details about the channels.  In accordance with the JSON-RPC specification, the format of a notification  is that of a request message without an <code>id</code> field. The value of the <code>method</code> field will always be <code>\"subscription\"</code>. The <code>params</code> field will always be an object with 2 members: <code>channel</code> and <code>data</code>. The value of the <code>channel</code> member is the name of the channel (a string). The value of the <code>data</code> member is an object that contains data  that is specific for the channel.   ## Authentication  > An example of a JSON request with token:  ```json {     \"id\": 5647,     \"method\": \"private/get_subaccounts\",     \"params\": {         \"access_token\": \"67SVutDoVZSzkUStHSuk51WntMNBJ5mh5DYZhwzpiqDF\"     } } ```  The API consists of `public` and `private` methods. The public methods do not require authentication. The private methods use OAuth 2.0 authentication. This means that a valid OAuth access token must be included in the request, which can get achived by calling method [public/auth](#public-auth).  When the token was assigned to the user, it should be passed along, with other request parameters, back to the server:  |Connection type|Access token placement |----|-----------| |**Websocket**|Inside request JSON parameters, as an `access_token` field| |**HTTP (REST)**|Header `Authorization: bearer ```Token``` ` value|  ### Additional authorization method - basic user credentials  <span style=\"color:red\"><b> ! Not recommended - however, it could be useful for quick testing API</b></span></br>  Every `private` method could be accessed by providing, inside HTTP `Authorization: Basic XXX` header, values with user `ClientId` and assigned `ClientSecret` (both values can be found on the API page on the Deribit website) encoded with `Base64`:  <code>Authorization: Basic BASE64(`ClientId` + `:` + `ClientSecret`)</code>   ### Additional authorization method - Deribit signature credentials  The Derbit service provides dedicated authorization method, which harness user generated signature to increase security level for passing request data. Generated value is passed inside `Authorization` header, coded as:  <code>Authorization: deri-hmac-sha256 id=```ClientId```,ts=```Timestamp```,sig=```Signature```,nonce=```Nonce```</code>  where:  |Deribit credential|Description |----|-----------| |*ClientId*|Can be found on the API page on the Deribit website| |*Timestamp*|Time when the request was generated - given as **miliseconds**. It's valid for **60 seconds** since generation, after that time any request with an old timestamp will be rejected.| |*Signature*|Value for signature calculated as described below | |*Nonce*|Single usage, user generated initialization vector for the server token|  The signature is generated by the following formula:  <code> Signature = HEX_STRING( HMAC-SHA256( ClientSecret, StringToSign ) );</code></br>  <code> StringToSign =  Timestamp + \"\\n\" + Nonce + \"\\n\" + RequestData;</code></br>  <code> RequestData =  UPPERCASE(HTTP_METHOD())  + \"\\n\" + URI() + \"\\n\" + RequestBody + \"\\n\";</code></br>   e.g. (using shell with ```openssl``` tool):  <code>&nbsp;&nbsp;&nbsp;&nbsp;ClientId=AAAAAAAAAAA</code></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;ClientSecret=ABCD</code></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;Timestamp=$( date +%s000 )</code></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;Nonce=$( cat /dev/urandom | tr -dc 'a-z0-9' | head -c8 )</code></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;URI=\"/api/v2/private/get_account_summary?currency=BTC\"</code></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;HttpMethod=GET</code></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;Body=\"\"</code></br></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;Signature=$( echo -ne \"${Timestamp}\\n${Nonce}\\n${HttpMethod}\\n${URI}\\n${Body}\\n\" | openssl sha256 -r -hmac \"$ClientSecret\" | cut -f1 -d' ' )</code></br></br> <code>&nbsp;&nbsp;&nbsp;&nbsp;echo $Signature</code></br></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;shell output> ea40d5e5e4fae235ab22b61da98121fbf4acdc06db03d632e23c66bcccb90d2c  (**WARNING**: Exact value depends on current timestamp and client credentials</code></br></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;curl -s -X ${HttpMethod} -H \"Authorization: deri-hmac-sha256 id=${ClientId},ts=${Timestamp},nonce=${Nonce},sig=${Signature}\" \"https://www.deribit.com${URI}\"</code></br></br>    ### Additional authorization method - signature credentials (WebSocket API)  When connecting through Websocket, user can request for authorization using ```client_credential``` method, which requires providing following parameters (as a part of JSON request):  |JSON parameter|Description |----|-----------| |*grant_type*|Must be **client_signature**| |*client_id*|Can be found on the API page on the Deribit website| |*timestamp*|Time when the request was generated - given as **miliseconds**. It's valid for **60 seconds** since generation, after that time any request with an old timestamp will be rejected.| |*signature*|Value for signature calculated as described below | |*nonce*|Single usage, user generated initialization vector for the server token| |*data*|**Optional** field, which contains any user specific value|  The signature is generated by the following formula:  <code> StringToSign =  Timestamp + \"\\n\" + Nonce + \"\\n\" + Data;</code></br>  <code> Signature = HEX_STRING( HMAC-SHA256( ClientSecret, StringToSign ) );</code></br>   e.g. (using shell with ```openssl``` tool):  <code>&nbsp;&nbsp;&nbsp;&nbsp;ClientId=AAAAAAAAAAA</code></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;ClientSecret=ABCD</code></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;Timestamp=$( date +%s000 ) # e.g. 1554883365000 </code></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;Nonce=$( cat /dev/urandom | tr -dc 'a-z0-9' | head -c8 ) # e.g. fdbmmz79 </code></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;Data=\"\"</code></br></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;Signature=$( echo -ne \"${Timestamp}\\n${Nonce}\\n${Data}\\n\" | openssl sha256 -r -hmac \"$ClientSecret\" | cut -f1 -d' ' )</code></br></br> <code>&nbsp;&nbsp;&nbsp;&nbsp;echo $Signature</code></br></br>  <code>&nbsp;&nbsp;&nbsp;&nbsp;shell output> e20c9cd5639d41f8bbc88f4d699c4baf94a4f0ee320e9a116b72743c449eb994  (**WARNING**: Exact value depends on current timestamp and client credentials</code></br></br>   You can also check the signature value using some online tools like, e.g: [https://codebeautify.org/hmac-generator](https://codebeautify.org/hmac-generator) (but don't forget about adding *newline* after each part of the hashed text and remember that you **should use** it only with your **test credentials**).   Here's a sample JSON request created using the values from the example above:  <code> {                            </br> &nbsp;&nbsp;\"jsonrpc\" : \"2.0\",         </br> &nbsp;&nbsp;\"id\" : 9929,               </br> &nbsp;&nbsp;\"method\" : \"public/auth\",  </br> &nbsp;&nbsp;\"params\" :                 </br> &nbsp;&nbsp;{                        </br> &nbsp;&nbsp;&nbsp;&nbsp;\"grant_type\" : \"client_signature\",   </br> &nbsp;&nbsp;&nbsp;&nbsp;\"client_id\" : \"AAAAAAAAAAA\",         </br> &nbsp;&nbsp;&nbsp;&nbsp;\"timestamp\": \"1554883365000\",        </br> &nbsp;&nbsp;&nbsp;&nbsp;\"nonce\": \"fdbmmz79\",                 </br> &nbsp;&nbsp;&nbsp;&nbsp;\"data\": \"\",                          </br> &nbsp;&nbsp;&nbsp;&nbsp;\"signature\" : \"e20c9cd5639d41f8bbc88f4d699c4baf94a4f0ee320e9a116b72743c449eb994\"  </br> &nbsp;&nbsp;}                        </br> }                            </br> </code>   ### Access scope  When asking for `access token` user can provide the required access level (called `scope`) which defines what type of functionality he/she wants to use, and whether requests are only going to check for some data or also to update them.  Scopes are required and checked for `private` methods, so if you plan to use only `public` information you can stay with values assigned by default.  |Scope|Description |----|-----------| |*account:read*|Access to **account** methods - read only data| |*account:read_write*|Access to **account** methods - allows to manage account settings, add subaccounts, etc.| |*trade:read*|Access to **trade** methods - read only data| |*trade:read_write*|Access to **trade** methods - required to create and modify orders| |*wallet:read*|Access to **wallet** methods - read only data| |*wallet:read_write*|Access to **wallet** methods - allows to withdraw, generate new deposit address, etc.| |*wallet:none*, *account:none*, *trade:none*|Blocked access to specified functionality|    <span style=\"color:red\">**NOTICE:**</span> Depending on choosing an authentication method (```grant type```) some scopes could be narrowed by the server. e.g. when ```grant_type = client_credentials``` and ```scope = wallet:read_write``` it's modified by the server as ```scope = wallet:read```\"   ## JSON-RPC over websocket Websocket is the prefered transport mechanism for the JSON-RPC API, because it is faster and because it can support [subscriptions](#subscriptions) and [cancel on disconnect](#private-enable_cancel_on_disconnect). The code examples that can be found next to each of the methods show how websockets can be used from Python or Javascript/node.js.  ## JSON-RPC over HTTP Besides websockets it is also possible to use the API via HTTP. The code examples for 'shell' show how this can be done using curl. Note that subscriptions and cancel on disconnect are not supported via HTTP.  #Methods   # noqa: E501
+
+    OpenAPI spec version: 2.0.0
+    Generated by: https://openapi-generator.tech
+"""
+
+
+import pprint
+import re  # noqa: F401
+
+import six
+
+
+class Withdrawal(object):
+    """NOTE: This class is auto generated by OpenAPI Generator.
+    Ref: https://openapi-generator.tech
+
+    Do not edit the class manually.
+    """
+
+    """
+    Attributes:
+      openapi_types (dict): The key is attribute name
+                            and the value is attribute type.
+      attribute_map (dict): The key is attribute name
+                            and the value is json key in definition.
+    """
+    openapi_types = {
+        'updated_timestamp': 'int',
+        'fee': 'float',
+        'confirmed_timestamp': 'int',
+        'amount': 'float',
+        'priority': 'float',
+        'currency': 'str',
+        'state': 'str',
+        'address': 'str',
+        'created_timestamp': 'int',
+        'id': 'int',
+        'transaction_id': 'str'
+    }
+
+    attribute_map = {
+        'updated_timestamp': 'updated_timestamp',
+        'fee': 'fee',
+        'confirmed_timestamp': 'confirmed_timestamp',
+        'amount': 'amount',
+        'priority': 'priority',
+        'currency': 'currency',
+        'state': 'state',
+        'address': 'address',
+        'created_timestamp': 'created_timestamp',
+        'id': 'id',
+        'transaction_id': 'transaction_id'
+    }
+
+    def __init__(self, updated_timestamp=None, fee=None, confirmed_timestamp=None, amount=None, priority=None, currency=None, state=None, address=None, created_timestamp=None, id=None, transaction_id=None):  # noqa: E501
+        """Withdrawal - a model defined in OpenAPI"""  # noqa: E501
+
+        self._updated_timestamp = None
+        self._fee = None
+        self._confirmed_timestamp = None
+        self._amount = None
+        self._priority = None
+        self._currency = None
+        self._state = None
+        self._address = None
+        self._created_timestamp = None
+        self._id = None
+        self._transaction_id = None
+        self.discriminator = None
+
+        self.updated_timestamp = updated_timestamp
+        if fee is not None:
+            self.fee = fee
+        self.confirmed_timestamp = confirmed_timestamp
+        self.amount = amount
+        if priority is not None:
+            self.priority = priority
+        self.currency = currency
+        self.state = state
+        self.address = address
+        if created_timestamp is not None:
+            self.created_timestamp = created_timestamp
+        if id is not None:
+            self.id = id
+        self.transaction_id = transaction_id
+
+    @property
+    def updated_timestamp(self):
+        """Gets the updated_timestamp of this Withdrawal.  # noqa: E501
+
+        The timestamp (seconds since the Unix epoch, with millisecond precision)  # noqa: E501
+
+        :return: The updated_timestamp of this Withdrawal.  # noqa: E501
+        :rtype: int
+        """
+        return self._updated_timestamp
+
+    @updated_timestamp.setter
+    def updated_timestamp(self, updated_timestamp):
+        """Sets the updated_timestamp of this Withdrawal.
+
+        The timestamp (seconds since the Unix epoch, with millisecond precision)  # noqa: E501
+
+        :param updated_timestamp: The updated_timestamp of this Withdrawal.  # noqa: E501
+        :type: int
+        """
+        if updated_timestamp is None:
+            raise ValueError("Invalid value for `updated_timestamp`, must not be `None`")  # noqa: E501
+
+        self._updated_timestamp = updated_timestamp
+
+    @property
+    def fee(self):
+        """Gets the fee of this Withdrawal.  # noqa: E501
+
+        Fee in currency  # noqa: E501
+
+        :return: The fee of this Withdrawal.  # noqa: E501
+        :rtype: float
+        """
+        return self._fee
+
+    @fee.setter
+    def fee(self, fee):
+        """Sets the fee of this Withdrawal.
+
+        Fee in currency  # noqa: E501
+
+        :param fee: The fee of this Withdrawal.  # noqa: E501
+        :type: float
+        """
+
+        self._fee = fee
+
+    @property
+    def confirmed_timestamp(self):
+        """Gets the confirmed_timestamp of this Withdrawal.  # noqa: E501
+
+        The timestamp (seconds since the Unix epoch, with millisecond precision) of withdrawal confirmation, `null` when not confirmed  # noqa: E501
+
+        :return: The confirmed_timestamp of this Withdrawal.  # noqa: E501
+        :rtype: int
+        """
+        return self._confirmed_timestamp
+
+    @confirmed_timestamp.setter
+    def confirmed_timestamp(self, confirmed_timestamp):
+        """Sets the confirmed_timestamp of this Withdrawal.
+
+        The timestamp (seconds since the Unix epoch, with millisecond precision) of withdrawal confirmation, `null` when not confirmed  # noqa: E501
+
+        :param confirmed_timestamp: The confirmed_timestamp of this Withdrawal.  # noqa: E501
+        :type: int
+        """
+
+        self._confirmed_timestamp = confirmed_timestamp
+
+    @property
+    def amount(self):
+        """Gets the amount of this Withdrawal.  # noqa: E501
+
+        Amount of funds in given currency  # noqa: E501
+
+        :return: The amount of this Withdrawal.  # noqa: E501
+        :rtype: float
+        """
+        return self._amount
+
+    @amount.setter
+    def amount(self, amount):
+        """Sets the amount of this Withdrawal.
+
+        Amount of funds in given currency  # noqa: E501
+
+        :param amount: The amount of this Withdrawal.  # noqa: E501
+        :type: float
+        """
+        if amount is None:
+            raise ValueError("Invalid value for `amount`, must not be `None`")  # noqa: E501
+
+        self._amount = amount
+
+    @property
+    def priority(self):
+        """Gets the priority of this Withdrawal.  # noqa: E501
+
+        Id of priority level  # noqa: E501
+
+        :return: The priority of this Withdrawal.  # noqa: E501
+        :rtype: float
+        """
+        return self._priority
+
+    @priority.setter
+    def priority(self, priority):
+        """Sets the priority of this Withdrawal.
+
+        Id of priority level  # noqa: E501
+
+        :param priority: The priority of this Withdrawal.  # noqa: E501
+        :type: float
+        """
+
+        self._priority = priority
+
+    @property
+    def currency(self):
+        """Gets the currency of this Withdrawal.  # noqa: E501
+
+        Currency, i.e `\"BTC\"`, `\"ETH\"`  # noqa: E501
+
+        :return: The currency of this Withdrawal.  # noqa: E501
+        :rtype: str
+        """
+        return self._currency
+
+    @currency.setter
+    def currency(self, currency):
+        """Sets the currency of this Withdrawal.
+
+        Currency, i.e `\"BTC\"`, `\"ETH\"`  # noqa: E501
+
+        :param currency: The currency of this Withdrawal.  # noqa: E501
+        :type: str
+        """
+        if currency is None:
+            raise ValueError("Invalid value for `currency`, must not be `None`")  # noqa: E501
+        allowed_values = ["BTC", "ETH"]  # noqa: E501
+        if currency not in allowed_values:
+            raise ValueError(
+                "Invalid value for `currency` ({0}), must be one of {1}"  # noqa: E501
+                .format(currency, allowed_values)
+            )
+
+        self._currency = currency
+
+    @property
+    def state(self):
+        """Gets the state of this Withdrawal.  # noqa: E501
+
+        Withdrawal state, allowed values : `unconfirmed`, `confirmed`, `cancelled`, `completed`, `interrupted`, `rejected`  # noqa: E501
+
+        :return: The state of this Withdrawal.  # noqa: E501
+        :rtype: str
+        """
+        return self._state
+
+    @state.setter
+    def state(self, state):
+        """Sets the state of this Withdrawal.
+
+        Withdrawal state, allowed values : `unconfirmed`, `confirmed`, `cancelled`, `completed`, `interrupted`, `rejected`  # noqa: E501
+
+        :param state: The state of this Withdrawal.  # noqa: E501
+        :type: str
+        """
+        if state is None:
+            raise ValueError("Invalid value for `state`, must not be `None`")  # noqa: E501
+        allowed_values = ["unconfirmed", "confirmed", "cancelled", "completed", "interrupted", "rejected"]  # noqa: E501
+        if state not in allowed_values:
+            raise ValueError(
+                "Invalid value for `state` ({0}), must be one of {1}"  # noqa: E501
+                .format(state, allowed_values)
+            )
+
+        self._state = state
+
+    @property
+    def address(self):
+        """Gets the address of this Withdrawal.  # noqa: E501
+
+        Address in proper format for currency  # noqa: E501
+
+        :return: The address of this Withdrawal.  # noqa: E501
+        :rtype: str
+        """
+        return self._address
+
+    @address.setter
+    def address(self, address):
+        """Sets the address of this Withdrawal.
+
+        Address in proper format for currency  # noqa: E501
+
+        :param address: The address of this Withdrawal.  # noqa: E501
+        :type: str
+        """
+        if address is None:
+            raise ValueError("Invalid value for `address`, must not be `None`")  # noqa: E501
+
+        self._address = address
+
+    @property
+    def created_timestamp(self):
+        """Gets the created_timestamp of this Withdrawal.  # noqa: E501
+
+        The timestamp (seconds since the Unix epoch, with millisecond precision)  # noqa: E501
+
+        :return: The created_timestamp of this Withdrawal.  # noqa: E501
+        :rtype: int
+        """
+        return self._created_timestamp
+
+    @created_timestamp.setter
+    def created_timestamp(self, created_timestamp):
+        """Sets the created_timestamp of this Withdrawal.
+
+        The timestamp (seconds since the Unix epoch, with millisecond precision)  # noqa: E501
+
+        :param created_timestamp: The created_timestamp of this Withdrawal.  # noqa: E501
+        :type: int
+        """
+
+        self._created_timestamp = created_timestamp
+
+    @property
+    def id(self):
+        """Gets the id of this Withdrawal.  # noqa: E501
+
+        Withdrawal id in Deribit system  # noqa: E501
+
+        :return: The id of this Withdrawal.  # noqa: E501
+        :rtype: int
+        """
+        return self._id
+
+    @id.setter
+    def id(self, id):
+        """Sets the id of this Withdrawal.
+
+        Withdrawal id in Deribit system  # noqa: E501
+
+        :param id: The id of this Withdrawal.  # noqa: E501
+        :type: int
+        """
+
+        self._id = id
+
+    @property
+    def transaction_id(self):
+        """Gets the transaction_id of this Withdrawal.  # noqa: E501
+
+        Transaction id in proper format for currency, `null` if id is not available  # noqa: E501
+
+        :return: The transaction_id of this Withdrawal.  # noqa: E501
+        :rtype: str
+        """
+        return self._transaction_id
+
+    @transaction_id.setter
+    def transaction_id(self, transaction_id):
+        """Sets the transaction_id of this Withdrawal.
+
+        Transaction id in proper format for currency, `null` if id is not available  # noqa: E501
+
+        :param transaction_id: The transaction_id of this Withdrawal.  # noqa: E501
+        :type: str
+        """
+
+        self._transaction_id = transaction_id
+
+    def to_dict(self):
+        """Returns the model properties as a dict"""
+        result = {}
+
+        for attr, _ in six.iteritems(self.openapi_types):
+            value = getattr(self, attr)
+            if isinstance(value, list):
+                result[attr] = list(map(
+                    lambda x: x.to_dict() if hasattr(x, "to_dict") else x,
+                    value
+                ))
+            elif hasattr(value, "to_dict"):
+                result[attr] = value.to_dict()
+            elif isinstance(value, dict):
+                result[attr] = dict(map(
+                    lambda item: (item[0], item[1].to_dict())
+                    if hasattr(item[1], "to_dict") else item,
+                    value.items()
+                ))
+            else:
+                result[attr] = value
+
+        return result
+
+    def to_str(self):
+        """Returns the string representation of the model"""
+        return pprint.pformat(self.to_dict())
+
+    def __repr__(self):
+        """For `print` and `pprint`"""
+        return self.to_str()
+
+    def __eq__(self, other):
+        """Returns true if both objects are equal"""
+        if not isinstance(other, Withdrawal):
+            return False
+
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        """Returns true if both objects are not equal"""
+        return not self == other
