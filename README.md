@@ -1,5 +1,8 @@
 # Deribit Simple Gui
 
+![image](https://user-images.githubusercontent.com/24235975/63960932-9dd10000-ca5d-11e9-940e-b3a45b81fc3e.png)
+*newest version of app/UI*
+
 ## Description
 
 An experimental GUI interface, with a few useful features, for cryptocurrency trading on [Deribit.](https://www.deribit.com)
